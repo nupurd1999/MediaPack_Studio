@@ -1,0 +1,2611 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediaPack Studio — Enterprise Digital Asset Management</title>
+  <meta name="description" content="Enterprise-grade bulk asset packaging and multi-tenant media engine for global industrial brands." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ═══════════════════════════════════════════════════
+       DESIGN TOKENS — Dark Mode (default)
+    ═══════════════════════════════════════════════════ */
+    :root {
+      --red:          #E30613;
+      --red-dim:      rgba(227,6,19,0.12);
+      --red-hover:    #CC0000;
+      --red-glow:     rgba(227,6,19,0.25);
+
+      --bg:           #020617;
+      --surface:      #0F172A;
+      --card:         #1E293B;
+      --card-high:    #243047;
+      --border:       #1E3A5F;
+      --border-soft:  #1E293B;
+
+      --text:         #F8FAFC;
+      --text-2:       #CBD5E1;
+      --text-3:       #64748B;
+      --text-4:       #334155;
+
+      --accent:       #10B981;
+      --accent-dim:   rgba(16,185,129,0.12);
+      --blue:         #3B82F6;
+      --blue-dim:     rgba(59,130,246,0.12);
+      --amber:        #F59E0B;
+      --amber-dim:    rgba(245,158,11,0.12);
+      --purple:       #8B5CF6;
+
+      --sidebar-w:    240px;
+      --header-h:     60px;
+
+      --radius-sm:    6px;
+      --radius-md:    10px;
+      --radius-lg:    14px;
+      --radius-xl:    20px;
+
+      --shadow-sm:    0 1px 3px rgba(0,0,0,0.4);
+      --shadow-md:    0 4px 16px rgba(0,0,0,0.5);
+      --shadow-lg:    0 12px 40px rgba(0,0,0,0.6);
+
+      --font-mono:    'JetBrains Mono', monospace;
+      --transition:   0.2s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    [data-theme="light"] {
+      --bg:           #F1F5F9;
+      --surface:      #FFFFFF;
+      --card:         #FFFFFF;
+      --card-high:    #F8FAFC;
+      --border:       #CBD5E1;
+      --border-soft:  #E2E8F0;
+
+      --text:         #0F172A;
+      --text-2:       #334155;
+      --text-3:       #64748B;
+      --text-4:       #94A3B8;
+
+      --shadow-sm:    0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md:    0 4px 16px rgba(0,0,0,0.1);
+      --shadow-lg:    0 12px 40px rgba(0,0,0,0.15);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 14px; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    img { max-width: 100%; display: block; }
+
+    /* ═══════════════════════════════════════════════════
+       SCROLLBAR
+    ═══════════════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* ═══════════════════════════════════════════════════
+       LAYOUT SHELL
+    ═══════════════════════════════════════════════════ */
+    .app-shell {
+      display: grid;
+      grid-template-rows: var(--header-h) 1fr;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      grid-template-areas:
+        "header header"
+        "sidebar main";
+      height: 100vh;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       HEADER
+    ═══════════════════════════════════════════════════ */
+    .header {
+      grid-area: header;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0 1.25rem;
+      z-index: 200;
+      position: sticky;
+      top: 0;
+    }
+
+    /* Brand */
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      text-decoration: none;
+      flex-shrink: 0;
+      width: calc(var(--sidebar-w) - 1.25rem);
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .brand-icon::after {
+      content: '';
+      position: absolute;
+      top: -3px;
+      right: -3px;
+      width: 8px;
+      height: 8px;
+      background: var(--red);
+      border-radius: 50%;
+      border: 2px solid var(--bg);
+    }
+
+    .brand-text {
+      font-weight: 800;
+      font-size: 0.95rem;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      line-height: 1.1;
+    }
+
+    .brand-sub {
+      font-size: 0.62rem;
+      color: var(--text-3);
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* Tenant Switcher */
+    .tenant-switcher {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .tenant-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.75rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-2);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+      white-space: nowrap;
+    }
+
+    .tenant-btn:hover { border-color: var(--red); color: var(--text); }
+    .tenant-btn .flag { font-size: 1rem; }
+    .tenant-btn .chevron { font-size: 0.6rem; margin-left: 0.2rem; color: var(--text-3); }
+
+    .tenant-badge {
+      font-size: 0.62rem;
+      padding: 0.1rem 0.4rem;
+      background: var(--red-dim);
+      color: var(--red);
+      border-radius: 4px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .tenant-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      min-width: 240px;
+      z-index: 300;
+      overflow: hidden;
+      display: none;
+    }
+
+    .tenant-dropdown.open { display: block; }
+
+    .tenant-option {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.625rem 1rem;
+      cursor: pointer;
+      transition: background var(--transition);
+      font-size: 0.82rem;
+    }
+
+    .tenant-option:hover { background: var(--card-high); }
+    .tenant-option.active { background: var(--red-dim); }
+    .tenant-option .flag { font-size: 1.1rem; }
+    .tenant-option-info { flex: 1; }
+    .tenant-option-name { font-weight: 600; color: var(--text); }
+    .tenant-option-db { font-size: 0.72rem; color: var(--text-3); font-family: var(--font-mono); }
+
+    /* Global Search */
+    .search-wrap {
+      flex: 1;
+      max-width: 480px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.45rem 1rem 0.45rem 2.25rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 0.82rem;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .search-input::placeholder { color: var(--text-3); }
+    .search-input:focus { border-color: var(--red); box-shadow: 0 0 0 3px var(--red-glow); }
+
+    .search-icon {
+      position: absolute;
+      left: 0.7rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-3);
+      font-size: 0.85rem;
+      pointer-events: none;
+    }
+
+    .search-kbd {
+      position: absolute;
+      right: 0.6rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.62rem;
+      color: var(--text-3);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.1rem 0.35rem;
+      font-family: var(--font-mono);
+    }
+
+    /* Header right controls */
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-left: auto;
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+    }
+
+    .toggle-track {
+      width: 40px;
+      height: 22px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      position: relative;
+      transition: background var(--transition);
+      cursor: pointer;
+    }
+
+    .toggle-track.light { background: var(--red); border-color: var(--red); }
+
+    .toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      background: var(--text-3);
+      border-radius: 50%;
+      transition: transform var(--transition), background var(--transition);
+    }
+
+    .toggle-track.light .toggle-thumb {
+      transform: translateX(18px);
+      background: #fff;
+    }
+
+    .toggle-icon { font-size: 0.85rem; }
+
+    /* User Profile */
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+
+    .user-profile:hover { background: var(--card); }
+
+    .user-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--red), #8B0000);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .user-info { line-height: 1.25; }
+    .user-name { font-size: 0.78rem; font-weight: 600; color: var(--text); }
+    .user-role { font-size: 0.65rem; color: var(--text-3); }
+
+    /* ═══════════════════════════════════════════════════
+       SIDEBAR
+    ═══════════════════════════════════════════════════ */
+    .sidebar {
+      grid-area: sidebar;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 1rem 0;
+      overflow-y: auto;
+    }
+
+    .sidebar-section {
+      margin-bottom: 0.5rem;
+    }
+
+    .sidebar-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: var(--text-4);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0 1rem 0.5rem;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.55rem 1rem;
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+      border-left: 2px solid transparent;
+      text-decoration: none;
+      color: var(--text-3);
+      font-size: 0.82rem;
+      font-weight: 500;
+      position: relative;
+    }
+
+    .nav-item:hover { background: var(--card); color: var(--text-2); }
+
+    .nav-item.active {
+      background: var(--red-dim);
+      color: var(--text);
+      border-left-color: var(--red);
+    }
+
+    .nav-icon { font-size: 1rem; width: 18px; text-align: center; flex-shrink: 0; }
+    .nav-label { flex: 1; }
+
+    .nav-badge {
+      font-size: 0.62rem;
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      background: var(--card);
+      color: var(--text-3);
+      border: 1px solid var(--border);
+    }
+
+    .nav-item.active .nav-badge {
+      background: var(--red);
+      color: #fff;
+      border-color: var(--red);
+    }
+
+    .nav-badge.live {
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-color: rgba(16,185,129,0.3);
+      animation: pulse-badge 2s infinite;
+    }
+
+    @keyframes pulse-badge {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    /* Sidebar storage meter */
+    .sidebar-storage {
+      margin: 0 1rem 0.25rem;
+      padding: 0.75rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+    }
+
+    .storage-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .storage-label { font-size: 0.72rem; font-weight: 600; color: var(--text-2); }
+    .storage-val { font-size: 0.72rem; font-family: var(--font-mono); color: var(--text-3); }
+
+    .storage-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .storage-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--red), #FF6B35);
+      border-radius: 2px;
+      width: 68%;
+    }
+
+    .storage-detail {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.4rem;
+    }
+
+    .storage-detail span { font-size: 0.65rem; color: var(--text-3); }
+
+    .sidebar-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0.75rem 1rem;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       MAIN CONTENT
+    ═══════════════════════════════════════════════════ */
+    .main {
+      grid-area: main;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .view { display: none; }
+    .view.active { display: flex; flex-direction: column; flex: 1; }
+
+    /* ═══════════════════════════════════════════════════
+       PAGE HEADER (per view)
+    ═══════════════════════════════════════════════════ */
+    .page-header {
+      padding: 1.25rem 1.5rem 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .page-title { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; }
+    .page-subtitle { font-size: 0.78rem; color: var(--text-3); margin-top: 0.15rem; }
+
+    .page-actions { display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0; }
+
+    /* ═══════════════════════════════════════════════════
+       BUTTONS
+    ═══════════════════════════════════════════════════ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+      white-space: nowrap;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-primary {
+      background: var(--red);
+      color: #fff;
+      box-shadow: 0 2px 8px var(--red-glow);
+    }
+
+    .btn-primary:hover {
+      background: var(--red-hover);
+      box-shadow: 0 4px 16px var(--red-glow);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-2);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover { background: var(--card); color: var(--text); border-color: var(--text-3); }
+
+    .btn-icon {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      justify-content: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text-3);
+    }
+
+    .btn-icon:hover { color: var(--text); border-color: var(--text-3); }
+
+    /* ═══════════════════════════════════════════════════
+       PILLS & BADGES
+    ═══════════════════════════════════════════════════ */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .pill-red   { background: var(--red-dim);    color: var(--red);    border: 1px solid rgba(227,6,19,0.25); }
+    .pill-green { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(16,185,129,0.25); }
+    .pill-blue  { background: var(--blue-dim);   color: var(--blue);   border: 1px solid rgba(59,130,246,0.25); }
+    .pill-amber { background: var(--amber-dim);  color: var(--amber);  border: 1px solid rgba(245,158,11,0.25); }
+    .pill-gray  { background: var(--card);       color: var(--text-3); border: 1px solid var(--border); }
+
+    .pill-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       ── VIEW 1: ASSET CATALOG ──
+    ═══════════════════════════════════════════════════ */
+    .catalog-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 0;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* Filter Sidebar */
+    .filter-sidebar {
+      border-right: 1px solid var(--border);
+      padding: 1rem;
+      overflow-y: auto;
+    }
+
+    .filter-group { margin-bottom: 1.25rem; }
+
+    .filter-group-title {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-3);
+      margin-bottom: 0.6rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .filter-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.5rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background var(--transition);
+      margin-bottom: 0.25rem;
+    }
+
+    .filter-chip:hover { background: var(--card); }
+
+    .filter-chip.active { background: var(--red-dim); }
+
+    .filter-check {
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 3px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.55rem;
+      transition: all var(--transition);
+    }
+
+    .filter-chip.active .filter-check {
+      background: var(--red);
+      border-color: var(--red);
+      color: #fff;
+    }
+
+    .filter-chip-label { font-size: 0.77rem; color: var(--text-2); flex: 1; }
+    .filter-chip.active .filter-chip-label { color: var(--text); font-weight: 500; }
+    .filter-count { font-size: 0.65rem; color: var(--text-3); font-family: var(--font-mono); }
+
+    /* Asset Grid Area */
+    .asset-grid-area {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .asset-grid-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    .asset-count { font-size: 0.78rem; color: var(--text-3); margin-right: auto; }
+    .asset-count strong { color: var(--text); font-family: var(--font-mono); }
+
+    .view-switcher {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .view-switch-btn {
+      padding: 0.3rem 0.6rem;
+      background: transparent;
+      border: none;
+      color: var(--text-3);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all var(--transition);
+    }
+
+    .view-switch-btn.active { background: var(--red); color: #fff; }
+
+    .sort-select {
+      padding: 0.35rem 0.6rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-2);
+      font-size: 0.78rem;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Asset Grid */
+    .asset-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      padding: 1.25rem;
+      overflow-y: auto;
+      align-content: start;
+    }
+
+    .asset-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      cursor: pointer;
+      transition: all var(--transition);
+      position: relative;
+      border-left: 2px solid transparent;
+    }
+
+    .asset-card:hover {
+      border-color: var(--red);
+      border-left-color: var(--red);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .asset-card.selected {
+      border-color: var(--red);
+      border-left-color: var(--red);
+      box-shadow: 0 0 0 2px var(--red-glow);
+    }
+
+    .asset-thumb {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .asset-thumb-canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .asset-type-badge {
+      position: absolute;
+      top: 0.5rem;
+      left: 0.5rem;
+      font-size: 0.58rem;
+      font-weight: 700;
+      padding: 0.15rem 0.45rem;
+      border-radius: 3px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .type-img  { background: var(--blue);   color: #fff; }
+    .type-pdf  { background: var(--red);    color: #fff; }
+    .type-cad  { background: var(--purple); color: #fff; }
+    .type-vid  { background: var(--accent); color: #fff; }
+
+    .asset-select-check {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.5);
+      border: 1.5px solid rgba(255,255,255,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      color: transparent;
+      transition: all var(--transition);
+    }
+
+    .asset-card.selected .asset-select-check,
+    .asset-card:hover .asset-select-check {
+      background: var(--red);
+      border-color: var(--red);
+      color: #fff;
+    }
+
+    .asset-hover-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
+      padding: 0.75rem 0.6rem 0.4rem;
+      transform: translateY(100%);
+      transition: transform var(--transition);
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .asset-card:hover .asset-hover-overlay { transform: translateY(0); }
+
+    .overlay-btn {
+      flex: 1;
+      padding: 0.3rem 0.4rem;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: background var(--transition);
+    }
+
+    .overlay-btn:hover { background: var(--red-hover); }
+
+    .overlay-btn-ghost {
+      flex: 1;
+      padding: 0.3rem 0.4rem;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: background var(--transition);
+    }
+
+    .overlay-btn-ghost:hover { background: rgba(255,255,255,0.2); }
+
+    .asset-info {
+      padding: 0.65rem 0.75rem;
+    }
+
+    .asset-sku {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--red);
+      font-weight: 600;
+      margin-bottom: 0.15rem;
+    }
+
+    .asset-name {
+      font-size: 0.77rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .asset-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .asset-dims { font-size: 0.65rem; color: var(--text-3); font-family: var(--font-mono); }
+    .asset-size { font-size: 0.65rem; color: var(--text-3); font-family: var(--font-mono); }
+
+    /* ═══════════════════════════════════════════════════
+       ── VIEW 2: COLLABORATIVE LIGHTBOX ──
+    ═══════════════════════════════════════════════════ */
+    .lightbox-view { padding: 0; }
+
+    .lightbox-header-bar {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      background: var(--surface);
+    }
+
+    .lightbox-title-wrap { flex: 1; }
+
+    .lightbox-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .lightbox-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 0.35rem;
+      flex-wrap: wrap;
+    }
+
+    .avatar-stack {
+      display: flex;
+      align-items: center;
+    }
+
+    .avatar-stack .avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--surface);
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: -6px;
+      flex-shrink: 0;
+    }
+
+    .avatar-stack .avatar:first-child { margin-left: 0; }
+
+    .shared-label { font-size: 0.72rem; color: var(--text-3); margin-left: 0.4rem; }
+
+    .lock-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.6rem;
+      background: var(--accent-dim);
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: var(--radius-sm);
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .lock-badge .lock-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse-live 2s infinite;
+    }
+
+    @keyframes pulse-live {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    /* Conflict Toast */
+    .conflict-toast {
+      margin: 0.75rem 1.5rem;
+      padding: 0.75rem 1rem;
+      background: var(--amber-dim);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-left: 3px solid var(--amber);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.8rem;
+      animation: slide-in-top 0.3s ease;
+    }
+
+    @keyframes slide-in-top {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .toast-icon { font-size: 1rem; flex-shrink: 0; }
+    .toast-text { flex: 1; color: var(--amber); line-height: 1.4; }
+    .toast-text strong { font-weight: 700; }
+    .toast-dismiss {
+      background: none;
+      border: none;
+      color: var(--amber);
+      cursor: pointer;
+      font-size: 1rem;
+      opacity: 0.7;
+      padding: 0.2rem;
+    }
+
+    .toast-dismiss:hover { opacity: 1; }
+
+    /* Lightbox asset grid */
+    .lightbox-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 0.75rem;
+      padding: 1.25rem 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .lightbox-asset-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: all var(--transition);
+      cursor: pointer;
+      position: relative;
+      border-left: 2px solid transparent;
+    }
+
+    .lightbox-asset-card:hover {
+      border-color: var(--red);
+      border-left-color: var(--red);
+      transform: translateY(-2px);
+    }
+
+    .lightbox-asset-card.selected {
+      border-color: var(--red);
+      border-left-color: var(--red);
+      box-shadow: 0 0 0 2px var(--red-glow);
+    }
+
+    .lightbox-asset-thumb {
+      width: 100%;
+      aspect-ratio: 1;
+      background: var(--bg);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lightbox-asset-info {
+      padding: 0.4rem 0.5rem;
+    }
+
+    .lightbox-asset-sku {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      color: var(--red);
+      font-weight: 600;
+    }
+
+    .lightbox-asset-name {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Lightbox footer action bar */
+    .lightbox-action-bar {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .selection-info { font-size: 0.8rem; color: var(--text-3); }
+    .selection-info strong { color: var(--text); font-family: var(--font-mono); }
+
+    /* ═══════════════════════════════════════════════════
+       ── EXPORT DRAWER ──
+    ═══════════════════════════════════════════════════ */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2,6,23,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 400;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .drawer-overlay.open { display: block; opacity: 1; }
+
+    .export-drawer {
+      position: fixed;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 480px;
+      max-width: 95vw;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .export-drawer.open { transform: translateX(0); }
+
+    .drawer-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .drawer-title {
+      font-size: 1rem;
+      font-weight: 800;
+      flex: 1;
+      letter-spacing: -0.01em;
+    }
+
+    .drawer-close {
+      width: 28px;
+      height: 28px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-3);
+      font-size: 1rem;
+      transition: all var(--transition);
+    }
+
+    .drawer-close:hover { background: var(--red-dim); color: var(--red); border-color: rgba(227,6,19,0.3); }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* Job info row */
+    .job-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .job-info-cell {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.75rem;
+    }
+
+    .job-info-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); font-weight: 700; margin-bottom: 0.25rem; }
+    .job-info-value { font-size: 0.88rem; font-weight: 700; font-family: var(--font-mono); color: var(--text); }
+
+    /* Progress Section */
+    .progress-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.25rem;
+    }
+
+    .progress-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .progress-status {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .progress-pct {
+      font-size: 1.5rem;
+      font-weight: 900;
+      font-family: var(--font-mono);
+      color: var(--red);
+      letter-spacing: -0.02em;
+    }
+
+    .progress-track {
+      height: 8px;
+      background: var(--bg);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 0.6rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--red), #FF6B35);
+      border-radius: 999px;
+      width: 0%;
+      transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      from { transform: translateX(-100%); }
+      to   { transform: translateX(300%); }
+    }
+
+    .progress-sub {
+      font-size: 0.72rem;
+      color: var(--text-3);
+      font-family: var(--font-mono);
+    }
+
+    /* Console Log */
+    .console-section { flex: 1; }
+
+    .console-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-3);
+      margin-bottom: 0.5rem;
+    }
+
+    .console-window {
+      background: #020617;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.75rem;
+      height: 200px;
+      overflow-y: auto;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      line-height: 1.7;
+    }
+
+    .console-line { display: flex; gap: 0.5rem; }
+    .console-ts { color: var(--text-4); flex-shrink: 0; }
+    .console-msg { color: #4ADE80; }
+    .console-msg.warn { color: var(--amber); }
+    .console-msg.error { color: var(--red); }
+    .console-msg.info { color: #60A5FA; }
+
+    /* Download Card */
+    .download-card {
+      background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03));
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      display: none;
+      animation: slide-in-top 0.3s ease;
+    }
+
+    .download-card.show { display: block; }
+
+    .download-success-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .success-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .success-text-main { font-size: 0.88rem; font-weight: 700; color: var(--text); }
+    .success-text-sub  { font-size: 0.72rem; color: var(--text-3); margin-top: 0.1rem; }
+
+    .btn-download {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all var(--transition);
+      font-family: 'Inter', sans-serif;
+      margin-bottom: 0.75rem;
+    }
+
+    .btn-download:hover { background: var(--red-hover); box-shadow: 0 4px 16px var(--red-glow); }
+
+    .expiry-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.72rem;
+      color: var(--text-3);
+    }
+
+    .expiry-timer { font-family: var(--font-mono); color: var(--amber); font-weight: 600; }
+
+    /* ═══════════════════════════════════════════════════
+       STAT CARDS (top of views)
+    ═══════════════════════════════════════════════════ */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+      padding: 1rem 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.875rem 1rem;
+      transition: border-color var(--transition);
+      border-left: 2px solid transparent;
+    }
+
+    .stat-card:hover { border-left-color: var(--red); }
+
+    .stat-label { font-size: 0.68rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 0.3rem; }
+    .stat-value { font-size: 1.4rem; font-weight: 800; font-family: var(--font-mono); letter-spacing: -0.02em; }
+    .stat-sub   { font-size: 0.65rem; color: var(--text-3); margin-top: 0.15rem; }
+    .stat-trend { font-size: 0.65rem; color: var(--accent); font-weight: 600; }
+
+    /* ═══════════════════════════════════════════════════
+       NOTIFICATION / TOAST SYSTEM
+    ═══════════════════════════════════════════════════ */
+    .toast-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 600;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      width: 320px;
+    }
+
+    .toast-notif {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      box-shadow: var(--shadow-md);
+      animation: slide-in-right 0.3s ease;
+    }
+
+    @keyframes slide-in-right {
+      from { opacity: 0; transform: translateX(20px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .toast-notif-icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.05rem; }
+    .toast-notif-body { flex: 1; }
+    .toast-notif-title { font-size: 0.78rem; font-weight: 700; color: var(--text); }
+    .toast-notif-msg   { font-size: 0.72rem; color: var(--text-3); margin-top: 0.1rem; line-height: 1.4; }
+
+    /* ═══════════════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════════════ */
+    @media (max-width: 900px) {
+      :root { --sidebar-w: 0px; }
+      .sidebar { display: none; }
+      .catalog-layout { grid-template-columns: 1fr; }
+      .filter-sidebar { display: none; }
+      .export-drawer { width: 100%; }
+    }
+
+    /* ═══════════════════════════════════════════════════
+       MISC UTILS
+    ═══════════════════════════════════════════════════ */
+    .section-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0.5rem 0;
+    }
+
+    .flex-center { display: flex; align-items: center; justify-content: center; }
+    .gap-xs { gap: 0.25rem; }
+    .gap-sm { gap: 0.5rem; }
+    .mt-sm { margin-top: 0.5rem; }
+    .mono { font-family: var(--font-mono); }
+
+    /* Loading skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, var(--card) 25%, var(--card-high) 50%, var(--card) 75%);
+      background-size: 200% 100%;
+      animation: skeleton-wave 1.5s infinite;
+      border-radius: 4px;
+    }
+
+    @keyframes skeleton-wave {
+      from { background-position: 200% 0; }
+      to   { background-position: -200% 0; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="app-shell">
+
+  <!-- ══════════════════════════════════════════════
+       HEADER
+  ══════════════════════════════════════════════ -->
+  <header class="header">
+    <a href="#" class="brand" onclick="return false;">
+      <div class="brand-icon">📦</div>
+      <div>
+        <div class="brand-text">MediaPack Studio</div>
+        <div class="brand-sub">Enterprise DAM Platform</div>
+      </div>
+    </a>
+
+    <!-- Tenant Switcher -->
+    <div class="tenant-switcher" id="tenantSwitcher">
+      <button class="tenant-btn" onclick="toggleTenantDropdown()">
+        <span class="flag" id="activeTenantFlag">🇩🇪</span>
+        <span id="activeTenantLabel">Germany</span>
+        <span class="tenant-badge" id="activeTenantCode">DE</span>
+        <span class="chevron">▼</span>
+      </button>
+      <div class="tenant-dropdown" id="tenantDropdown">
+        <div class="tenant-option active" onclick="selectTenant('DE','🇩🇪','Germany','media_catalog_de')">
+          <span class="flag">🇩🇪</span>
+          <div class="tenant-option-info">
+            <div class="tenant-option-name">Germany</div>
+            <div class="tenant-option-db">media_catalog_de</div>
+          </div>
+        </div>
+        <div class="tenant-option" onclick="selectTenant('NL','🇳🇱','Netherlands','media_catalog_nl')">
+          <span class="flag">🇳🇱</span>
+          <div class="tenant-option-info">
+            <div class="tenant-option-name">Netherlands</div>
+            <div class="tenant-option-db">media_catalog_nl</div>
+          </div>
+        </div>
+        <div class="tenant-option" onclick="selectTenant('US','🇺🇸','North America','media_catalog_us')">
+          <span class="flag">🇺🇸</span>
+          <div class="tenant-option-info">
+            <div class="tenant-option-name">North America</div>
+            <div class="tenant-option-db">media_catalog_us</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" type="text" placeholder="Search assets, SKUs, tags… (Ctrl+K)" id="globalSearch" />
+      <span class="search-kbd">Ctrl K</span>
+    </div>
+
+    <!-- Right Controls -->
+    <div class="header-controls">
+      <!-- Theme Toggle -->
+      <div class="theme-toggle" onclick="toggleTheme()">
+        <span class="toggle-icon">🌙</span>
+        <div class="toggle-track" id="themeTrack">
+          <div class="toggle-thumb" id="themeThumb"></div>
+        </div>
+        <span class="toggle-icon">☀️</span>
+      </div>
+
+      <!-- User Profile -->
+      <div class="user-profile">
+        <div class="user-avatar">ND</div>
+        <div class="user-info">
+          <div class="user-name">Nupoor Dhamal</div>
+          <div class="user-role">Senior Systems Lead</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════
+       SIDEBAR
+  ══════════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Workspace</div>
+
+      <div class="nav-item active" id="nav-catalog" onclick="switchView('catalog')">
+        <span class="nav-icon">🔍</span>
+        <span class="nav-label">Asset Catalog</span>
+        <span class="nav-badge">24,850</span>
+      </div>
+
+      <div class="nav-item" id="nav-lightbox" onclick="switchView('lightbox')">
+        <span class="nav-icon">📁</span>
+        <span class="nav-label">Lightboxes</span>
+        <span class="nav-badge">@v4</span>
+      </div>
+
+      <div class="nav-item" id="nav-export" onclick="switchView('export-history')">
+        <span class="nav-icon">⚡</span>
+        <span class="nav-label">Async Exporters</span>
+        <span class="nav-badge live">3 live</span>
+      </div>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Analytics</div>
+
+      <div class="nav-item">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">S3 Metrics</span>
+      </div>
+
+      <div class="nav-item">
+        <span class="nav-icon">📈</span>
+        <span class="nav-label">Export Reports</span>
+      </div>
+
+      <div class="nav-item">
+        <span class="nav-icon">🔒</span>
+        <span class="nav-label">Audit Trail</span>
+      </div>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <!-- Storage Meter -->
+    <div class="sidebar-storage">
+      <div class="storage-header">
+        <span class="storage-label">S3 Storage</span>
+        <span class="storage-val">68%</span>
+      </div>
+      <div class="storage-bar">
+        <div class="storage-fill"></div>
+      </div>
+      <div class="storage-detail">
+        <span>48.5 GB used</span>
+        <span>71.3 GB total</span>
+      </div>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">System</div>
+
+      <div class="nav-item">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Settings</span>
+      </div>
+
+      <div class="nav-item">
+        <span class="nav-icon">🐳</span>
+        <span class="nav-label">Infrastructure</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════════
+       MAIN CONTENT AREA
+  ══════════════════════════════════════════════ -->
+  <main class="main">
+
+    <!-- ─────────────────────────────────────────
+         VIEW 1: ASSET CATALOG
+    ───────────────────────────────────────── -->
+    <div class="view active" id="view-catalog">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <div class="page-title">Asset Catalog</div>
+          <div class="page-subtitle">
+            <span id="tenantRegionLabel">🇩🇪 Germany — media_catalog_de</span>
+            &nbsp;·&nbsp; Apache Solr faceted search
+          </div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-ghost">⬆ Upload Assets</button>
+          <button class="btn btn-ghost">⚙ Manage Fields</button>
+          <button class="btn btn-primary" onclick="openExportDrawer()">⚡ Bulk Export Selected</button>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-label">Total Assets</div>
+          <div class="stat-value" style="color: var(--text);">24,850</div>
+          <div class="stat-sub">Across all media types</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Images</div>
+          <div class="stat-value" style="color: var(--blue);">18,420</div>
+          <div class="stat-sub stat-trend">↑ +342 this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">CAD / 3D</div>
+          <div class="stat-value" style="color: var(--purple);">3,210</div>
+          <div class="stat-sub">Industrial models</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Documents</div>
+          <div class="stat-value" style="color: var(--amber);">2,150</div>
+          <div class="stat-sub">PDFs, datasheets</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Videos</div>
+          <div class="stat-value" style="color: var(--red);">1,070</div>
+          <div class="stat-sub">Product demos</div>
+        </div>
+      </div>
+
+      <!-- Catalog Body -->
+      <div class="catalog-layout" style="flex:1; min-height:0;">
+
+        <!-- Filter Sidebar -->
+        <div class="filter-sidebar">
+          <div class="filter-group">
+            <div class="filter-group-title">File Type</div>
+            <div class="filter-chip active" onclick="toggleFilter(this)">
+              <div class="filter-check">✓</div>
+              <span class="filter-chip-label">IMAGE_PNG</span>
+              <span class="filter-count">8,241</span>
+            </div>
+            <div class="filter-chip" onclick="toggleFilter(this)">
+              <div class="filter-check"></div>
+              <span class="filter-chip-label">IMAGE_JPG</span>
+              <span class="filter-count">7,902</span>
+            </div>
+            <div class="filter-chip" onclick="toggleFilter(this)">
+              <div class="filter-check"></div>
+              <span class="filter-chip-label">DOCUMENT_PDF</span>
+              <span class="filter-count">2,150</span>
+            </div>
+            <div class="filter-chip" onclick="toggleFilter(this)">
+              <div class="filter-check"></div>
+              <span class="filter-chip-label">CAD_3D</span>
+              <span class="filter-count">3,210</span>
+            </div>
+            <div class="filter-chip" onclick="toggleFilter(this)">
+              <div class="filter-check"></div>
+              <span class="filter-chip-label">VIDEO_MP4</span>
+              <span class="filter-count">1,070</span>
+            </div>
+            <div class="filter-chip" onclick="toggleFilter(this)">
+              <div class="filter-check"></div>
+              <span class="filter-chip-label">SVG_VECTOR</span>
+              <span class="filter-count">277</span>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-group-title">Resolution</div>
+            <div class="filter-chip" onclick="toggleFilter(this)">
+              <div class="filter-check"></div>
+              <span class="filter-chip-label">4K Ultra-HD</span>
+              <span class="filter-count">4,820</span>
+            </div>
+            <div class="filter-chip" onclick="toggleFilter(this)">
+              <div class="filter-check"></div>
+              <span class="filter-chip-label">Full HD</span>
+              <span class="filter-count">9,310</span>
+            </div>
+            <div class="filter-chip" onclick="toggleFilter(this)">
+              <div class="filter-check"></div>
+              <span class="filter-chip-label">HD Ready</span>
+              <span class="filter-count">6,140</span>
+            </div>
+            <div class="filter-chip" onclick="toggleFilter(this)">
+              <div class="filter-check"></div>
+              <span class="filter-chip-label">Vector / SVG</span>
+              <span class="filter-count">277</span>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-group-title">SKU Tags</div>
+            <div class="filter-chip" onclick="toggleFilter(this)">
+              <div class="filter-check"></div>
+              <span class="filter-chip-label">fastener</span>
+              <span class="filter-count">5,402</span>
+            </div>
+            <div class="filter-chip" onclick="toggleFilter(this)">
+              <div class="filter-check"></div>
+              <span class="filter-chip-label">bolt</span>
+              <span class="filter-count">3,211</span>
+            </div>
+            <div class="filter-chip" onclick="toggleFilter(this)">
+              <div class="filter-check"></div>
+              <span class="filter-chip-label">chemical</span>
+              <span class="filter-count">2,108</span>
+            </div>
+            <div class="filter-chip" onclick="toggleFilter(this)">
+              <div class="filter-check"></div>
+              <span class="filter-chip-label">tool</span>
+              <span class="filter-count">4,890</span>
+            </div>
+            <div class="filter-chip" onclick="toggleFilter(this)">
+              <div class="filter-check"></div>
+              <span class="filter-chip-label">automotive</span>
+              <span class="filter-count">1,776</span>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-group-title">Date Range</div>
+            <div class="filter-chip" onclick="toggleFilter(this)">
+              <div class="filter-check"></div>
+              <span class="filter-chip-label">Last 7 days</span>
+            </div>
+            <div class="filter-chip" onclick="toggleFilter(this)">
+              <div class="filter-check"></div>
+              <span class="filter-chip-label">Last 30 days</span>
+            </div>
+            <div class="filter-chip" onclick="toggleFilter(this)">
+              <div class="filter-check"></div>
+              <span class="filter-chip-label">Q3 2026</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Asset Grid Area -->
+        <div class="asset-grid-area">
+          <div class="asset-grid-toolbar">
+            <span class="asset-count"><strong>8,241</strong> assets matching filters</span>
+
+            <div class="view-switcher">
+              <button class="view-switch-btn active">⊞</button>
+              <button class="view-switch-btn">☰</button>
+            </div>
+
+            <select class="sort-select">
+              <option>Sort: Newest First</option>
+              <option>Sort: Oldest First</option>
+              <option>Sort: File Size ↓</option>
+              <option>Sort: SKU A-Z</option>
+            </select>
+
+            <button class="btn btn-ghost" style="font-size: 0.75rem;">Select All</button>
+          </div>
+
+          <!-- Asset Cards Grid -->
+          <div class="asset-grid" id="assetGrid">
+            <!-- Generated by JS below -->
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /view-catalog -->
+
+
+    <!-- ─────────────────────────────────────────
+         VIEW 2: COLLABORATIVE LIGHTBOX
+    ───────────────────────────────────────── -->
+    <div class="view" id="view-lightbox">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <div class="page-title">Collaborative Lightboxes</div>
+          <div class="page-subtitle">Shared media collections with MongoDB @Version optimistic locking</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-ghost">+ New Lightbox</button>
+        </div>
+      </div>
+
+      <!-- Active Lightbox Panel -->
+      <div class="lightbox-header-bar">
+        <div class="lightbox-title-wrap">
+          <div class="lightbox-title">
+            📁 Würth Q3 Fasteners Launch Assets
+            <span class="pill pill-green">Active</span>
+          </div>
+          <div class="lightbox-meta">
+            <!-- Owner + Shared users -->
+            <div class="avatar-stack">
+              <div class="avatar" style="background: linear-gradient(135deg, #E30613, #8B0000);">ND</div>
+              <div class="avatar" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">MK</div>
+              <div class="avatar" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">AL</div>
+              <div class="avatar" style="background: linear-gradient(135deg, #10B981, #059669);">JS</div>
+            </div>
+            <span class="shared-label">Shared with 4 users</span>
+            <span class="pill pill-gray">📋 LB-2026-Q3-FASTENERS</span>
+
+            <!-- Live Optimistic Lock Badge -->
+            <div class="lock-badge" id="lockBadge">
+              <div class="lock-dot"></div>
+              Optimistic Lock: Active &nbsp;·&nbsp; <strong>@Version 4</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conflict Warning Toast (initially hidden) -->
+      <div class="conflict-toast" id="conflictToast" style="display:none;">
+        <span class="toast-icon">⚠️</span>
+        <div class="toast-text">
+          <strong>Optimistic Lock Conflict:</strong> Version mismatch detected — another user modified this lightbox.
+          Reloading latest state from MongoDB…
+        </div>
+        <button class="toast-dismiss" onclick="dismissToast()">✕</button>
+      </div>
+
+      <!-- Lightbox Stats -->
+      <div class="stat-row" style="padding-top: 0.75rem;">
+        <div class="stat-card">
+          <div class="stat-label">Assets Selected</div>
+          <div class="stat-value" style="color: var(--red);" id="lbSelectedCount">12</div>
+          <div class="stat-sub">Ready for export</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Size</div>
+          <div class="stat-value" style="color: var(--text);">1.24 GB</div>
+          <div class="stat-sub">Uncompressed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Document Version</div>
+          <div class="stat-value" style="color: var(--accent);">v4</div>
+          <div class="stat-sub">@Version (MongoDB)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Last Modified</div>
+          <div class="stat-value" style="color: var(--text); font-size: 0.85rem;">2m ago</div>
+          <div class="stat-sub">by Nupoor Dhamal</div>
+        </div>
+      </div>
+
+      <!-- Lightbox Asset Grid -->
+      <div class="lightbox-grid" id="lightboxGrid">
+        <!-- Generated by JS -->
+      </div>
+
+      <!-- Action Bar -->
+      <div class="lightbox-action-bar">
+        <div class="selection-info"><strong id="lbSelectedText">12</strong> assets selected · <strong>1.24 GB</strong> total</div>
+        <div style="display:flex; gap: 0.5rem; margin-left:auto; flex-wrap: wrap;">
+          <button class="btn btn-ghost" onclick="simulateConflict()">⚠️ Simulate Conflict</button>
+          <button class="btn btn-ghost">🗑 Remove Selected</button>
+          <button class="btn btn-primary" onclick="openExportDrawer()">
+            ⚡ Package &amp; Export (<span id="lbExportCount">12</span> Assets)
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /view-lightbox -->
+
+
+    <!-- ─────────────────────────────────────────
+         VIEW 3: EXPORT HISTORY
+    ───────────────────────────────────────── -->
+    <div class="view" id="view-export-history">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Async Export Queue</div>
+          <div class="page-subtitle">Live STOMP WebSockets export monitoring · Redis-persisted job state</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary" onclick="openExportDrawer()">⚡ New Export Job</button>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-label">Active Jobs</div>
+          <div class="stat-value" style="color: var(--red);">3</div>
+          <div class="stat-sub stat-trend">● Live processing</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Completed Today</div>
+          <div class="stat-value" style="color: var(--accent);">47</div>
+          <div class="stat-sub">48.5 GB delivered</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg. Package Size</div>
+          <div class="stat-value" style="color: var(--text);">342 MB</div>
+          <div class="stat-sub">Per ZIP archive</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Queue Depth</div>
+          <div class="stat-value" style="color: var(--amber);">8</div>
+          <div class="stat-sub">Redis LIST pending</div>
+        </div>
+      </div>
+
+      <!-- Jobs table placeholder -->
+      <div style="padding: 1rem 1.5rem; flex: 1; overflow-y: auto;">
+        <div style="background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;">
+          <div style="padding: 0.875rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-size: 0.85rem; font-weight: 700;">Recent Export Jobs</span>
+            <span class="pill pill-green"><span class="pill-dot"></span>3 Processing</span>
+          </div>
+          <div id="jobsTable"></div>
+        </div>
+      </div>
+    </div><!-- /view-export-history -->
+
+  </main><!-- /main -->
+
+</div><!-- /app-shell -->
+
+
+<!-- ══════════════════════════════════════════════
+     EXPORT DRAWER
+══════════════════════════════════════════════ -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeExportDrawer()"></div>
+
+<div class="export-drawer" id="exportDrawer">
+  <div class="drawer-header">
+    <div style="width: 32px; height: 32px; background: var(--red-dim); border-radius: var(--radius-sm); display:flex; align-items:center; justify-content:center; font-size:1rem;">⚡</div>
+    <div class="drawer-title">Async Bulk Export</div>
+    <span class="pill pill-red" id="drawerStatusPill">● PENDING</span>
+    <button class="drawer-close" onclick="closeExportDrawer()">✕</button>
+  </div>
+
+  <div class="drawer-body">
+
+    <!-- Job Info -->
+    <div class="job-info-grid">
+      <div class="job-info-cell">
+        <div class="job-info-label">Job ID</div>
+        <div class="job-info-value" id="drawerJobId">JOB-DE-0099</div>
+      </div>
+      <div class="job-info-cell">
+        <div class="job-info-label">Tenant Region</div>
+        <div class="job-info-value" id="drawerTenant">🇩🇪 DE</div>
+      </div>
+      <div class="job-info-cell">
+        <div class="job-info-label">Assets</div>
+        <div class="job-info-value" id="drawerAssets">120 files</div>
+      </div>
+      <div class="job-info-cell">
+        <div class="job-info-label">Est. Size</div>
+        <div class="job-info-value">~342.8 MB</div>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-section">
+      <div class="progress-header">
+        <div>
+          <div class="progress-status" id="progressStatusText">Initializing packaging pipeline…</div>
+          <div class="progress-sub" id="progressSubText">Connecting to Redis task queue…</div>
+        </div>
+        <div class="progress-pct" id="progressPct">0%</div>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <!-- Live Console -->
+    <div class="console-section">
+      <div class="console-label">Live Task Log</div>
+      <div class="console-window" id="consoleWindow">
+        <div class="console-line">
+          <span class="console-ts">00:00:00</span>
+          <span class="console-msg info">MediaPack Export Worker initialized (exportTaskExecutor-1)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Download Card (shown on completion) -->
+    <div class="download-card" id="downloadCard">
+      <div class="download-success-row">
+        <div class="success-icon">✓</div>
+        <div>
+          <div class="success-text-main">Package Ready — 342.8 MB</div>
+          <div class="success-text-sub">Uploaded to AWS S3 · 24h pre-signed URL generated</div>
+        </div>
+      </div>
+      <button class="btn-download" id="downloadBtn">
+        ⬇ Download Media Package (.ZIP) — 342.8 MB
+      </button>
+      <div class="expiry-row">
+        🕐 Pre-signed S3 link expires in: <span class="expiry-timer" id="expiryTimer">23h 59m 42s</span>
+      </div>
+    </div>
+
+    <!-- Trigger / Restart -->
+    <button class="btn btn-primary" id="startExportBtn" onclick="startExportSimulation()"
+            style="width: 100%; justify-content: center; padding: 0.75rem;">
+      ▶ Start Export Job
+    </button>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     TOAST NOTIFICATIONS
+══════════════════════════════════════════════ -->
+<div class="toast-container" id="toastContainer"></div>
+
+
+<!-- ══════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════ -->
+<script>
+/* ────────────────────────────────────
+   ASSET DATA (simulated catalog)
+──────────────────────────────────── */
+const ASSET_TYPES = [
+  { key: 'IMAGE_PNG',    cls: 'type-img',  icon: '🖼',  color: '#3B82F6' },
+  { key: 'IMAGE_JPG',    cls: 'type-img',  icon: '📷',  color: '#6366F1' },
+  { key: 'DOCUMENT_PDF', cls: 'type-pdf',  icon: '📄',  color: '#E30613' },
+  { key: 'CAD_3D',       cls: 'type-cad',  icon: '🧊',  color: '#8B5CF6' },
+  { key: 'VIDEO_MP4',    cls: 'type-vid',  icon: '🎬',  color: '#10B981' },
+  { key: 'SVG_VECTOR',   cls: 'type-img',  icon: '✏️',  color: '#F59E0B' },
+];
+
+const PRODUCT_TAGS  = ['bolt','fastener','chemical','adhesive','drill','screwdriver','tool','socket','wrench','automotive'];
+const PRODUCT_NAMES = ['Industrial Hex Bolt','Drive Screw Assembly','Premium Fastener Set','Würth Adhesive Pro',
+                       'Torque Wrench 24mm','Socket Head Cap Screw','High-Res CAD Model','Assembly Line Clip',
+                       'Metric Thread Bolt','Stainless Steel Washer','Power Drill Bit Set','Chemical Anchor Kit',
+                       'Anti-Corrosion Spray','Cable Management Clip','Heavy-Duty Rivet Set'];
+
+function randFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randInt(a, b)  { return Math.floor(Math.random() * (b - a + 1)) + a; }
+
+function generateAssets(count) {
+  return Array.from({ length: count }, (_, i) => {
+    const type = ASSET_TYPES[i % ASSET_TYPES.length];
+    return {
+      id:    `asset-${String(i + 1).padStart(4,'0')}`,
+      sku:   `SKU-WURTH-${String(randInt(1000, 9999))}`,
+      name:  randFrom(PRODUCT_NAMES),
+      type,
+      w:     randFrom([3840, 1920, 1280, 4096, 2048]),
+      h:     randFrom([2160, 1080, 720, 3072, 1536]),
+      size:  `${(Math.random() * 20 + 1).toFixed(1)} MB`,
+      hue:   randInt(0, 360),
+      selected: i < 3,
+    };
+  });
+}
+
+const CATALOG_ASSETS  = generateAssets(24);
+const LIGHTBOX_ASSETS = generateAssets(16);
+let   selectedCount   = 12;
+
+/* ────────────────────────────────────
+   CANVAS THUMBNAIL RENDERER
+──────────────────────────────────── */
+function drawAssetThumb(canvas, asset) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+
+  // Background gradient
+  const grad = ctx.createLinearGradient(0, 0, w, h);
+  grad.addColorStop(0, `hsl(${asset.hue}, 30%, 12%)`);
+  grad.addColorStop(1, `hsl(${asset.hue}, 20%, 8%)`);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Grid pattern overlay
+  ctx.strokeStyle = `hsla(${asset.hue}, 40%, 40%, 0.07)`;
+  ctx.lineWidth = 1;
+  for (let x = 0; x < w; x += 16) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+  for (let y = 0; y < h; y += 16) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+
+  // Central icon shape
+  ctx.save();
+  ctx.translate(w / 2, h / 2 - 4);
+
+  if (asset.type.key === 'CAD_3D') {
+    // Draw wireframe cube
+    ctx.strokeStyle = `hsla(${asset.hue}, 80%, 70%, 0.8)`;
+    ctx.lineWidth = 1.5;
+    const s = Math.min(w, h) * 0.25;
+    ctx.strokeRect(-s/2, -s/2, s, s);
+    ctx.strokeRect(-s/2 + s*0.3, -s/2 - s*0.3, s, s);
+    ctx.beginPath();
+    ctx.moveTo(-s/2, -s/2); ctx.lineTo(-s/2 + s*0.3, -s/2 - s*0.3);
+    ctx.moveTo( s/2, -s/2); ctx.lineTo( s/2 + s*0.3, -s/2 - s*0.3);
+    ctx.moveTo(-s/2,  s/2); ctx.lineTo(-s/2 + s*0.3,  s/2 - s*0.3);
+    ctx.moveTo( s/2,  s/2); ctx.lineTo( s/2 + s*0.3,  s/2 - s*0.3);
+    ctx.stroke();
+  } else if (asset.type.key === 'DOCUMENT_PDF') {
+    const s = Math.min(w, h) * 0.22;
+    ctx.fillStyle = `hsla(0, 70%, 55%, 0.15)`;
+    ctx.beginPath(); ctx.roundRect(-s/2, -s/2, s, s * 1.3, 4); ctx.fill();
+    ctx.strokeStyle = `hsla(0, 70%, 65%, 0.5)`; ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = `hsla(0, 70%, 65%, 0.6)`;
+    ctx.fillRect(-s * 0.3, -s * 0.1, s * 0.6, 2);
+    ctx.fillRect(-s * 0.3,  s * 0.1, s * 0.4, 2);
+    ctx.fillRect(-s * 0.3,  s * 0.3, s * 0.5, 2);
+  } else if (asset.type.key === 'VIDEO_MP4') {
+    ctx.fillStyle = `hsla(${asset.hue}, 60%, 50%, 0.2)`;
+    ctx.beginPath();
+    ctx.arc(0, 0, Math.min(w, h) * 0.18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `hsla(${asset.hue}, 70%, 70%, 0.85)`;
+    ctx.beginPath();
+    const r = Math.min(w, h) * 0.1;
+    ctx.moveTo(r * 0.9, 0);
+    ctx.lineTo(-r * 0.5, r * 0.8);
+    ctx.lineTo(-r * 0.5, -r * 0.8);
+    ctx.closePath();
+    ctx.fill();
+  } else {
+    // Image / Vector: Abstract product shape
+    ctx.fillStyle = `hsla(${asset.hue}, 50%, 50%, 0.08)`;
+    const r = Math.min(w, h) * 0.22;
+    for (let i = 0; i < 6; i++) {
+      ctx.beginPath();
+      ctx.arc(
+        Math.cos((i / 6) * Math.PI * 2) * r * 0.4,
+        Math.sin((i / 6) * Math.PI * 2) * r * 0.4,
+        r * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.strokeStyle = `hsla(${asset.hue}, 70%, 70%, 0.4)`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.35, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Asset icon text (centered)
+  ctx.font = `${Math.min(w, h) * 0.22}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.globalAlpha = 0.55;
+  ctx.fillText(asset.type.icon, w / 2, h / 2 + 2);
+  ctx.globalAlpha = 1;
+}
+
+/* ────────────────────────────────────
+   RENDER ASSET CATALOG GRID
+──────────────────────────────────── */
+function renderCatalog() {
+  const grid = document.getElementById('assetGrid');
+  grid.innerHTML = '';
+
+  CATALOG_ASSETS.forEach((asset, idx) => {
+    const card = document.createElement('div');
+    card.className = 'asset-card' + (asset.selected ? ' selected' : '');
+    card.dataset.idx = idx;
+
+    card.innerHTML = `
+      <div class="asset-thumb">
+        <canvas class="asset-thumb-canvas" width="200" height="150" id="canvas-c-${idx}"></canvas>
+        <span class="asset-type-badge ${asset.type.cls}">${asset.type.key}</span>
+        <div class="asset-select-check">✓</div>
+        <div class="asset-hover-overlay">
+          <button class="overlay-btn" onclick="addToLightbox(event, '${asset.id}')">+ Lightbox</button>
+          <button class="overlay-btn-ghost" onclick="quickPreview(event, '${asset.id}')">👁 Preview</button>
+        </div>
+      </div>
+      <div class="asset-info">
+        <div class="asset-sku">${asset.sku}</div>
+        <div class="asset-name">${asset.name}</div>
+        <div class="asset-meta">
+          <span class="asset-dims">${asset.w}×${asset.h}</span>
+          <span class="asset-size">${asset.size}</span>
+        </div>
+      </div>
+    `;
+
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.asset-hover-overlay')) return;
+      card.classList.toggle('selected');
+      CATALOG_ASSETS[idx].selected = card.classList.contains('selected');
+    });
+
+    grid.appendChild(card);
+
+    // Draw canvas thumbnail after DOM insertion
+    requestAnimationFrame(() => {
+      const canvas = document.getElementById(`canvas-c-${idx}`);
+      if (canvas) drawAssetThumb(canvas, asset);
+    });
+  });
+}
+
+/* ────────────────────────────────────
+   RENDER LIGHTBOX GRID
+──────────────────────────────────── */
+function renderLightbox() {
+  const grid = document.getElementById('lightboxGrid');
+  grid.innerHTML = '';
+
+  LIGHTBOX_ASSETS.forEach((asset, idx) => {
+    const card = document.createElement('div');
+    card.className = 'lightbox-asset-card' + (idx < 12 ? ' selected' : '');
+    card.dataset.idx = idx;
+
+    card.innerHTML = `
+      <div class="lightbox-asset-thumb">
+        <canvas width="160" height="160" id="canvas-l-${idx}"></canvas>
+        <span class="asset-type-badge ${asset.type.cls}" style="font-size: 0.52rem;">${asset.type.key}</span>
+      </div>
+      <div class="lightbox-asset-info">
+        <div class="lightbox-asset-sku">${asset.sku}</div>
+        <div class="lightbox-asset-name">${asset.name}</div>
+      </div>
+    `;
+
+    card.addEventListener('click', () => {
+      card.classList.toggle('selected');
+      updateLightboxSelection();
+    });
+
+    grid.appendChild(card);
+
+    requestAnimationFrame(() => {
+      const canvas = document.getElementById(`canvas-l-${idx}`);
+      if (canvas) drawAssetThumb(canvas, asset);
+    });
+  });
+}
+
+function updateLightboxSelection() {
+  const selected = document.querySelectorAll('.lightbox-asset-card.selected').length;
+  document.getElementById('lbSelectedCount').textContent = selected;
+  document.getElementById('lbSelectedText').textContent = selected;
+  document.getElementById('lbExportCount').textContent = selected;
+}
+
+/* ────────────────────────────────────
+   RENDER EXPORT JOBS TABLE
+──────────────────────────────────── */
+const MOCK_JOBS = [
+  { id: 'JOB-DE-0099', tenant: '🇩🇪 DE', assets: 120, size: '342.8 MB', status: 'PROCESSING', progress: 65, ts: '10:14:02' },
+  { id: 'JOB-NL-0088', tenant: '🇳🇱 NL', assets: 84,  size: '218.4 MB', status: 'PROCESSING', progress: 42, ts: '10:09:17' },
+  { id: 'JOB-US-0077', tenant: '🇺🇸 US', assets: 56,  size: '94.1 MB',  status: 'PROCESSING', progress: 87, ts: '10:01:55' },
+  { id: 'JOB-DE-0076', tenant: '🇩🇪 DE', assets: 200, size: '610.2 MB', status: 'COMPLETED',  progress: 100, ts: '09:48:33' },
+  { id: 'JOB-DE-0075', tenant: '🇩🇪 DE', assets: 32,  size: '48.7 MB',  status: 'COMPLETED',  progress: 100, ts: '09:22:11' },
+  { id: 'JOB-NL-0074', tenant: '🇳🇱 NL', assets: 11,  size: '12.3 MB',  status: 'FAILED',     progress: 0,   ts: '08:55:04' },
+];
+
+function renderJobsTable() {
+  const container = document.getElementById('jobsTable');
+  if (!container) return;
+
+  container.innerHTML = MOCK_JOBS.map(job => {
+    const statusCls = job.status === 'COMPLETED' ? 'pill-green' : job.status === 'FAILED' ? 'pill-red' : 'pill-blue';
+    const progressBar = job.status === 'PROCESSING'
+      ? `<div style="height:4px; background: var(--border); border-radius:2px; margin-top:4px; width:100px;">
+           <div style="height:100%; width:${job.progress}%; background: var(--red); border-radius:2px;"></div>
+         </div>`
+      : '';
+
+    return `
+      <div style="display:grid; grid-template-columns: 1.4fr 0.7fr 0.7fr 0.8fr 1fr 0.8fr; align-items:center;
+                  padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--border); gap: 1rem; font-size: 0.78rem;">
+        <div>
+          <div style="font-family: var(--font-mono); color: var(--text); font-weight:600;">${job.id}</div>
+          <div style="font-size: 0.65rem; color: var(--text-3); margin-top: 0.1rem;">${job.ts}</div>
+        </div>
+        <div style="color: var(--text-2);">${job.tenant}</div>
+        <div style="font-family: var(--font-mono); color: var(--text-3);">${job.assets} files</div>
+        <div style="font-family: var(--font-mono); color: var(--text-2);">${job.size}</div>
+        <div>
+          <span class="pill ${statusCls}"><span class="pill-dot"></span>${job.status}</span>
+          ${progressBar}
+        </div>
+        <div>
+          <button class="btn btn-ghost" style="font-size: 0.72rem; padding: 0.3rem 0.6rem;"
+                  onclick="openExportDrawer()">
+            ${job.status === 'COMPLETED' ? '⬇ Download' : job.status === 'PROCESSING' ? '📡 Monitor' : '🔄 Retry'}
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ────────────────────────────────────
+   VIEW SWITCHING
+──────────────────────────────────── */
+function switchView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  const viewMap = {
+    'catalog':        ['view-catalog',        'nav-catalog'],
+    'lightbox':       ['view-lightbox',       'nav-lightbox'],
+    'export-history': ['view-export-history', 'nav-export'],
+  };
+
+  const [viewId, navId] = viewMap[name] || [];
+  if (viewId) document.getElementById(viewId)?.classList.add('active');
+  if (navId)  document.getElementById(navId)?.classList.add('active');
+
+  if (name === 'lightbox') renderLightbox();
+  if (name === 'export-history') renderJobsTable();
+}
+
+/* ────────────────────────────────────
+   TENANT SWITCHER
+──────────────────────────────────── */
+function toggleTenantDropdown() {
+  document.getElementById('tenantDropdown').classList.toggle('open');
+}
+
+function selectTenant(code, flag, name, db) {
+  document.getElementById('activeTenantFlag').textContent  = flag;
+  document.getElementById('activeTenantLabel').textContent = name;
+  document.getElementById('activeTenantCode').textContent  = code;
+  document.getElementById('tenantRegionLabel').textContent = `${flag} ${name} — ${db}`;
+
+  // Update drawer tenant
+  document.getElementById('drawerTenant').textContent = `${flag} ${code}`;
+
+  // Mark active option
+  document.querySelectorAll('.tenant-option').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  document.getElementById('tenantDropdown').classList.remove('open');
+
+  showToast('success', '🔄 Tenant Switched', `Database routed to ${db}`, 3000);
+}
+
+// Close on outside click
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#tenantSwitcher')) {
+    document.getElementById('tenantDropdown').classList.remove('open');
+  }
+});
+
+/* ────────────────────────────────────
+   THEME TOGGLE
+──────────────────────────────────── */
+let darkMode = true;
+
+function toggleTheme() {
+  darkMode = !darkMode;
+  document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+  const track = document.getElementById('themeTrack');
+  track.classList.toggle('light', !darkMode);
+}
+
+/* ────────────────────────────────────
+   FILTER CHIPS
+──────────────────────────────────── */
+function toggleFilter(el) {
+  el.classList.toggle('active');
+  const isActive = el.classList.contains('active');
+  el.querySelector('.filter-check').textContent = isActive ? '✓' : '';
+}
+
+/* ────────────────────────────────────
+   LIGHTBOX ACTIONS
+──────────────────────────────────── */
+function addToLightbox(e, assetId) {
+  e.stopPropagation();
+  showToast('success', '📁 Added to Lightbox', `Asset ${assetId} added to Würth Q3 Fasteners`, 2500);
+}
+
+function quickPreview(e, assetId) {
+  e.stopPropagation();
+  showToast('info', '👁 Preview', `Loading preview for ${assetId}…`, 2000);
+}
+
+function simulateConflict() {
+  const toast = document.getElementById('conflictToast');
+  toast.style.display = 'flex';
+  showToast('warning', '⚠️ Optimistic Lock Conflict', 'Version mismatch on CollaborativeLightbox @Version 4 → reloading…', 4000);
+  setTimeout(() => {
+    toast.style.display = 'none';
+    showToast('success', '✅ Conflict Resolved', 'Lightbox reloaded from MongoDB — @Version 5', 3000);
+    document.getElementById('lockBadge').innerHTML =
+      '<div class="lock-dot"></div> Optimistic Lock: Active &nbsp;·&nbsp; <strong>@Version 5</strong>';
+  }, 3500);
+}
+
+function dismissToast() {
+  document.getElementById('conflictToast').style.display = 'none';
+}
+
+/* ────────────────────────────────────
+   EXPORT DRAWER
+──────────────────────────────────── */
+function openExportDrawer() {
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('exportDrawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeExportDrawer() {
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.getElementById('exportDrawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ────────────────────────────────────
+   EXPORT SIMULATION
+──────────────────────────────────── */
+let exportRunning = false;
+let expirySeconds = 86399;
+let expiryInterval = null;
+
+function startExportSimulation() {
+  if (exportRunning) return;
+  exportRunning = true;
+
+  const jobId = `JOB-${document.getElementById('activeTenantCode').textContent}-${String(randInt(1000,9999)).padStart(4,'0')}`;
+  document.getElementById('drawerJobId').textContent = jobId;
+  document.getElementById('startExportBtn').textContent = '⏳ Job Running…';
+  document.getElementById('startExportBtn').disabled = true;
+  document.getElementById('downloadCard').classList.remove('show');
+  document.getElementById('drawerStatusPill').className = 'pill pill-blue';
+  document.getElementById('drawerStatusPill').textContent = '● PROCESSING';
+
+  const fill  = document.getElementById('progressFill');
+  const pctEl = document.getElementById('progressPct');
+  const con   = document.getElementById('consoleWindow');
+  const sub   = document.getElementById('progressSubText');
+  const stat  = document.getElementById('progressStatusText');
+
+  // Clear console
+  con.innerHTML = '';
+
+  let pct = 0;
+  const totalAssets = 120;
+
+  const logs = [
+    [0,   'info',  'Export job enqueued to Redis (mediapack:export:jobs)'],
+    [2,   'info',  'Worker picked up job from Redis FIFO queue'],
+    [5,   '',      'Fetching asset manifest from MongoDB (media_catalog_de)…'],
+    [10,  '',      'Downloading asset batch [1-20] from AWS S3…'],
+    [18,  '',      'Compressing SKU-WURTH-1042 (industrial_bolt_4k.png, 18.2 MB)…'],
+    [25,  '',      'Compressing SKU-WURTH-1043 (hex_socket_cad_model.step, 8.1 MB)…'],
+    [34,  '',      'ZipOutputStream → streaming bytes to S3 upload buffer…'],
+    [42,  '',      'Downloading asset batch [41-60] from AWS S3…'],
+    [51,  'warn',  'Large asset SKU-WURTH-2110 (42.8 MB) — chunking into 4 parts…'],
+    [58,  '',      'Packaging video SKU-WURTH-3301 (assembly_line_clip.mp4)…'],
+    [65,  '',      'Downloading asset batch [61-80] from AWS S3…'],
+    [72,  '',      'Compressing PDF datasheets (technical_spec_DE.pdf)…'],
+    [79,  '',      'Compressing CAD models batch (25 files)…'],
+    [86,  '',      'Downloading final asset batch [101-120] from AWS S3…'],
+    [93,  '',      'Finalizing ZipOutputStream — flushing remaining buffer bytes…'],
+    [97,  'info',  'Uploading mediapack-export.zip (342.8 MB) to S3 bucket…'],
+    [99,  'info',  'Generating 24h AWS S3 pre-signed download URL…'],
+    [100, 'info',  'Export COMPLETED — pre-signed URL ready for client download'],
+  ];
+
+  let logIdx = 0;
+
+  function getTs() {
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+  }
+
+  function addConsoleLine(msg, type = '') {
+    const line = document.createElement('div');
+    line.className = 'console-line';
+    line.innerHTML = `<span class="console-ts">${getTs()}</span><span class="console-msg ${type}">${msg}</span>`;
+    con.appendChild(line);
+    con.scrollTop = con.scrollHeight;
+  }
+
+  const interval = setInterval(() => {
+    pct = Math.min(pct + randInt(1, 3), 100);
+
+    fill.style.width = pct + '%';
+    pctEl.textContent = pct + '%';
+
+    const assetsDone = Math.floor((pct / 100) * totalAssets);
+    sub.textContent = `Packaging asset ${assetsDone}/${totalAssets} — ${pct < 50 ? 'Fetching from S3' : pct < 90 ? 'Compressing to ZIP' : 'Finalizing upload'}…`;
+    stat.textContent = pct < 100 ? 'Processing assets…' : 'Export complete!';
+
+    // Fire scheduled log lines
+    while (logIdx < logs.length && pct >= logs[logIdx][0]) {
+      addConsoleLine(logs[logIdx][2], logs[logIdx][1]);
+      logIdx++;
+    }
+
+    if (pct >= 100) {
+      clearInterval(interval);
+      exportRunning = false;
+
+      document.getElementById('drawerStatusPill').className = 'pill pill-green';
+      document.getElementById('drawerStatusPill').textContent = '✓ COMPLETED';
+      document.getElementById('startExportBtn').textContent = '🔄 Run New Export';
+      document.getElementById('startExportBtn').disabled = false;
+      document.getElementById('downloadCard').classList.add('show');
+
+      // Start expiry countdown
+      if (expiryInterval) clearInterval(expiryInterval);
+      expirySeconds = 86399;
+      expiryInterval = setInterval(() => {
+        expirySeconds = Math.max(0, expirySeconds - 1);
+        const h = Math.floor(expirySeconds / 3600);
+        const m = Math.floor((expirySeconds % 3600) / 60);
+        const s = expirySeconds % 60;
+        document.getElementById('expiryTimer').textContent =
+          `${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+      }, 1000);
+
+      showToast('success', '✅ Export Complete', `${jobId} — ZIP packaged & uploaded to S3`, 4000);
+    }
+  }, 120);
+}
+
+/* ────────────────────────────────────
+   TOAST NOTIFICATION SYSTEM
+──────────────────────────────────── */
+function showToast(type, title, msg, duration = 3000) {
+  const icons = { success: '✅', warning: '⚠️', error: '❌', info: 'ℹ️' };
+  const container = document.getElementById('toastContainer');
+
+  const toast = document.createElement('div');
+  toast.className = 'toast-notif';
+  toast.innerHTML = `
+    <div class="toast-notif-icon">${icons[type] || 'ℹ️'}</div>
+    <div class="toast-notif-body">
+      <div class="toast-notif-title">${title}</div>
+      <div class="toast-notif-msg">${msg}</div>
+    </div>
+  `;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(20px)';
+    toast.style.transition = 'all 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
+}
+
+/* ────────────────────────────────────
+   KEYBOARD SHORTCUTS
+──────────────────────────────────── */
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    document.getElementById('globalSearch').focus();
+  }
+  if (e.key === 'Escape') {
+    closeExportDrawer();
+    document.getElementById('tenantDropdown').classList.remove('open');
+  }
+});
+
+/* ────────────────────────────────────
+   INIT
+──────────────────────────────────── */
+renderCatalog();
+renderJobsTable();
+
+// Welcome toast after a short delay
+setTimeout(() => {
+  showToast('info', '📦 MediaPack Studio', 'Connected to media_catalog_de · 24,850 assets indexed', 4000);
+}, 800);
+</script>
+</body>
+</html>

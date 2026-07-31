@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  mediapack-app:
+    build: .
+    container_name: mediapack-studio-app
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+      - SPRING_DATA_MONGODB_URI=mongodb://admin:secret@mongodb:27017/?authSource=admin
+      - SPRING_REDIS_HOST=redis
+      - SOLR_URL=http://solr:8983/solr/product_media
+      - AWS_S3_ENDPOINT=http://localstack:4566
+    depends_on:
+      - mongodb
+      - redis
+      - solr
+      - localstack
+
+  mongodb:
+    image: mongo:6.0
+    container_name: mediapack-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: secret
+    ports:
+      - "27017:27017"
+
+  redis:
+    image: redis:7-alpine
+    container_name: mediapack-redis
+    ports:
+      - "6379:6379"
+
+  solr:
+    image: solr:9.5
+    container_name: mediapack-solr
+    ports:
+      - "8983:8983"
+    command:
+      - solr-precreate
+      - product_media
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: mediapack-localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3

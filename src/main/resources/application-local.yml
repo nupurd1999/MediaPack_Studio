@@ -1,0 +1,18 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  data:
+    mongodb:
+      uri: mongodb://admin:secret@localhost:27017/?authSource=admin
+    redis:
+      host: localhost
+      port: 6379
+
+aws:
+  s3:
+    endpoint: http://localhost:4566
+    region: us-east-1
+
+solr:
+  url: http://localhost:8983/solr/product_media
