@@ -216,25 +216,80 @@
     .tenant-option-name { font-weight: 600; color: var(--text); }
     .tenant-option-db { font-size: 0.72rem; color: var(--text-3); font-family: var(--font-mono); }
 
-    .search-wrap { flex: 1; max-width: 480px; position: relative; }
-    .search-input {
+    .dedicated-search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
       width: 100%;
-      padding: 0.45rem 2.2rem 0.45rem 2.25rem;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      font-size: 0.82rem;
-      font-family: 'Inter', sans-serif;
-      outline: none;
-      transition: border-color var(--transition), box-shadow var(--transition);
+      border-radius: var(--radius-md);
+      transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
-    .search-input::placeholder { color: var(--text-3); }
-    .search-input:focus { border-color: var(--red); box-shadow: 0 0 0 3px var(--red-glow); }
-    .search-icon { position: absolute; left: 0.7rem; top: 50%; transform: translateY(-50%); color: var(--text-3); pointer-events: none; }
-    .search-clear { position: absolute; right: 2.4rem; top: 50%; transform: translateY(-50%); color: var(--text-3); cursor: pointer; font-size: 0.85rem; display: none; }
-    .search-clear:hover { color: var(--text); }
-    .search-kbd { position: absolute; right: 0.6rem; top: 50%; transform: translateY(-50%); font-size: 0.62rem; color: var(--text-3); background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 0.1rem 0.35rem; font-family: var(--font-mono); }
+    .dedicated-search-box:focus-within {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px var(--red-glow), 0 4px 16px rgba(0, 0, 0, 0.12);
+      background: var(--card);
+    }
+    .dedicated-search-icon {
+      position: absolute;
+      left: 1rem;
+      color: var(--red);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dedicated-search-input {
+      width: 100%;
+      height: 46px;
+      padding: 0 5.2rem 0 2.8rem;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+    }
+    .dedicated-search-input::placeholder {
+      color: var(--text-3);
+      font-weight: 400;
+    }
+    .dedicated-search-clear {
+      position: absolute;
+      right: 4.2rem;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--card-high);
+      color: var(--text-3);
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+    }
+    .dedicated-search-clear:hover {
+      background: var(--red);
+      color: #fff;
+    }
+    .dedicated-search-kbd {
+      position: absolute;
+      right: 0.8rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--text-3);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.15rem 0.45rem;
+      font-family: var(--font-mono);
+      letter-spacing: 0.05em;
+      pointer-events: none;
+      box-shadow: inset 0 -1px 0 rgba(0,0,0,0.2);
+    }
 
     .header-controls { display: flex; align-items: center; gap: 0.75rem; margin-left: auto; }
     .theme-toggle { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-3); }
@@ -708,13 +763,7 @@
       </div>
     </div>
 
-    <!-- Search Bar -->
-    <div class="search-wrap">
-      <span class="search-icon icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
-      <input class="search-input" type="text" placeholder="Search assets, SKUs, tags… (Ctrl+K)" id="globalSearch" oninput="handleSearch(this.value)" />
-      <span class="search-clear icon" id="searchClear" onclick="clearSearch()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span>
-      <span class="search-kbd" id="searchKbd">Ctrl K</span>
-    </div>
+
 
     <!-- Controls -->
     <div class="header-controls">
@@ -845,6 +894,20 @@
         </div>
       </div>
 
+      <!-- Dedicated Full-Width Catalog Search Input Bar -->
+      <div style="padding: 0 1.5rem;">
+        <div class="dedicated-search-box" style="margin-top: 0.75rem; margin-bottom: 0.75rem;">
+          <span class="dedicated-search-icon icon">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </span>
+          <input class="dedicated-search-input" type="text" placeholder="Search catalog by asset name, SKU, or tags..." id="catalogSearch" oninput="handleCatalogSearch(this.value)" />
+          <span class="dedicated-search-clear icon" id="catalogSearchClear" onclick="clearCatalogSearch()" title="Clear Search">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </span>
+          <span class="dedicated-search-kbd">Ctrl K</span>
+        </div>
+      </div>
+
       <div class="catalog-layout" style="flex:1; min-height:0;">
         <!-- Filter Sidebar -->
         <div class="filter-sidebar">
@@ -890,6 +953,7 @@
         </div>
 
         <div class="asset-grid-area">
+
           <div class="asset-grid-toolbar">
             <span class="asset-count"><strong id="gridMatchCount">12</strong> assets matching filters</span>
 
@@ -985,6 +1049,20 @@
           <div class="stat-label">Last Modified</div>
           <div class="stat-value" style="color: var(--text); font-size: 0.85rem;">Just now</div>
           <div class="stat-sub">by Nupoor Dhamal</div>
+        </div>
+      </div>
+
+      <!-- Dedicated Lightbox Search Input Bar -->
+      <div style="padding: 0.75rem 1.5rem 0.25rem;">
+        <div class="dedicated-search-box" style="margin-bottom: 0;">
+          <span class="dedicated-search-icon icon">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </span>
+          <input class="dedicated-search-input" type="text" placeholder="Search assets within this Lightbox collection..." id="lightboxSearch" oninput="handleLightboxSearch(this.value)" />
+          <span class="dedicated-search-clear icon" id="lightboxSearchClear" onclick="clearLightboxSearch()" title="Clear Search">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </span>
+          <span class="dedicated-search-kbd">Ctrl K</span>
         </div>
       </div>
 
@@ -1504,15 +1582,48 @@ function drawAssetThumb(canvas, asset) {
   ctx.restore();
 }
 
-function handleSearch(q) {
-  searchQuery = (q || '').trim().toLowerCase();
+let catalogSearchQuery = '';
+let lightboxSearchQuery = '';
+
+function handleCatalogSearch(q) {
+  catalogSearchQuery = (q || '').trim().toLowerCase();
+  const clearBtn = document.getElementById('catalogSearchClear');
+  if (clearBtn) clearBtn.style.display = catalogSearchQuery ? 'flex' : 'none';
   renderCatalog();
 }
 
-function clearSearch() {
-  document.getElementById('globalSearch').value = '';
-  handleSearch('');
+function clearCatalogSearch() {
+  const input = document.getElementById('catalogSearch');
+  if (input) input.value = '';
+  handleCatalogSearch('');
 }
+
+function handleLightboxSearch(q) {
+  lightboxSearchQuery = (q || '').trim().toLowerCase();
+  const clearBtn = document.getElementById('lightboxSearchClear');
+  if (clearBtn) clearBtn.style.display = lightboxSearchQuery ? 'flex' : 'none';
+  renderLightbox();
+}
+
+function clearLightboxSearch() {
+  const input = document.getElementById('lightboxSearch');
+  if (input) input.value = '';
+  handleLightboxSearch('');
+}
+
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    const catSearch = document.getElementById('catalogSearch');
+    const lbSearch = document.getElementById('lightboxSearch');
+    const catalogView = document.getElementById('view-catalog');
+    if (catalogView && catalogView.classList.contains('active')) {
+      if (catSearch) catSearch.focus();
+    } else {
+      if (lbSearch) lbSearch.focus();
+    }
+  }
+});
 
 function toggleFilterChip(el, typeOrTag) {
   el.classList.toggle('active');
@@ -1528,7 +1639,7 @@ function renderCatalog() {
 
   const activeLb = getActiveLightbox();
   const filtered = CATALOG_ASSETS.filter(a => {
-    const matchesSearch = !searchQuery || a.name.toLowerCase().includes(searchQuery) || a.sku.toLowerCase().includes(searchQuery);
+    const matchesSearch = !catalogSearchQuery || a.name.toLowerCase().includes(catalogSearchQuery) || a.sku.toLowerCase().includes(catalogSearchQuery) || (a.tag && a.tag.toLowerCase().includes(catalogSearchQuery));
     const matchesFilter = activeFilterTypes.size === 0 || activeFilterTypes.has(a.type.key) || (a.tag && activeFilterTypes.has(a.tag));
     return matchesSearch && matchesFilter;
   });
@@ -1747,6 +1858,8 @@ function renderLightbox() {
   grid.innerHTML = '';
 
   const activeLb = getActiveLightbox();
+  const filteredAssets = activeLb.assets.filter(a => !lightboxSearchQuery || a.name.toLowerCase().includes(lightboxSearchQuery) || a.sku.toLowerCase().includes(lightboxSearchQuery));
+
   const selectedCount = activeLb.assets.filter(a => a.selected).length;
   document.getElementById('lbSelectedCount').textContent = selectedCount;
   document.getElementById('lbSelectedText').textContent = selectedCount;
@@ -1754,17 +1867,17 @@ function renderLightbox() {
   document.getElementById('lbTotalSize').textContent = `${(activeLb.assets.length * 12.4).toFixed(1)} MB`;
   document.getElementById('lbSelectedSizeText').textContent = `${(selectedCount * 12.4).toFixed(1)} MB`;
 
-  if (activeLb.assets.length === 0) {
+  if (filteredAssets.length === 0) {
     grid.innerHTML = `
       <div style="grid-column: 1 / -1; text-align:center; padding: 4rem 1rem; color: var(--text-3);">
-        <div style="font-size: 1rem; font-weight: 700; color: var(--text);">'${activeLb.title}' is currently empty</div>
-        <div style="font-size: 0.78rem; margin-top: 0.25rem;">Go to Asset Catalog and click "+ Lightbox" on any card to add items</div>
+        <div style="font-size: 1rem; font-weight: 700; color: var(--text);">${lightboxSearchQuery ? `No assets matching "${lightboxSearchQuery}"` : `'${activeLb.title}' is currently empty`}</div>
+        <div style="font-size: 0.78rem; margin-top: 0.25rem;">${lightboxSearchQuery ? 'Try another search term' : 'Go to Asset Catalog and click "+ Lightbox" on any card to add items'}</div>
       </div>
     `;
     return;
   }
 
-  activeLb.assets.forEach((asset, idx) => {
+  filteredAssets.forEach((asset, idx) => {
     const card = document.createElement('div');
     card.className = 'lightbox-asset-card' + (asset.selected ? ' selected' : '');
     card.innerHTML = `
