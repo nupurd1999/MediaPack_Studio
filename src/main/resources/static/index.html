@@ -1237,7 +1237,7 @@
     </div>
     <div class="modal-body">
       <label class="form-label">Lightbox Title</label>
-      <input type="text" class="form-input" id="newLbTitle" placeholder="e.g. Würth Q4 Automotive Campaign" value="Würth Q4 Automotive Campaign" />
+      <input type="text" class="form-input" id="newLbTitle" placeholder="e.g. Nupur Test / Würth Q4 Campaign" />
 
       <label class="form-label">Collection Region (Multi-Tenant DB)</label>
       <select class="form-select" id="newLbRegion">
@@ -1616,6 +1616,27 @@ let ALL_LIGHTBOXES = [
 
 let activeLightboxId = 'lb-1';
 
+function saveLightboxesToStorage() {
+  try {
+    localStorage.setItem('mediapack_all_lightboxes', JSON.stringify(ALL_LIGHTBOXES));
+    localStorage.setItem('mediapack_active_lb_id', activeLightboxId);
+  } catch (e) {}
+}
+
+function loadLightboxesFromStorage() {
+  try {
+    const saved = localStorage.getItem('mediapack_all_lightboxes');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) ALL_LIGHTBOXES = parsed;
+    }
+    const savedActive = localStorage.getItem('mediapack_active_lb_id');
+    if (savedActive && ALL_LIGHTBOXES.some(l => l.id === savedActive)) {
+      activeLightboxId = savedActive;
+    }
+  } catch (e) {}
+}
+
 function getActiveLightbox() {
   return ALL_LIGHTBOXES.find(l => l.id === activeLightboxId) || ALL_LIGHTBOXES[0];
 }
@@ -1627,18 +1648,35 @@ function renderLightboxTabs() {
   bar.innerHTML = ALL_LIGHTBOXES.map(lb => {
     const isActive = lb.id === activeLightboxId;
     const activeCls = isActive ? 'background:var(--red); color:#fff; border-color:var(--red);' : 'background:var(--card); color:var(--text-2); border-color:var(--border);';
+    const deleteBtnHtml = ALL_LIGHTBOXES.length > 1 ? `<span onclick="deleteLightbox(event, '${lb.id}')" style="margin-left:0.4rem; opacity:0.6; cursor:pointer;" title="Delete Lightbox">✕</span>` : '';
+
     return `
       <button class="btn" style="font-size:0.78rem; padding:0.4rem 0.75rem; ${activeCls}" onclick="switchActiveLightbox('${lb.id}')">
         <span class="icon"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg></span>
         ${lb.title}
         <span style="font-size:0.65rem; padding:0.1rem 0.4rem; border-radius:999px; background:rgba(0,0,0,0.25); font-family:var(--font-mono); margin-left:0.3rem;">${lb.assets.length}</span>
+        ${deleteBtnHtml}
       </button>
     `;
   }).join('');
 }
 
+function deleteLightbox(e, id) {
+  if (e) e.stopPropagation();
+  if (ALL_LIGHTBOXES.length <= 1) return;
+
+  ALL_LIGHTBOXES = ALL_LIGHTBOXES.filter(l => l.id !== id);
+  if (activeLightboxId === id) {
+    activeLightboxId = ALL_LIGHTBOXES[0].id;
+  }
+  saveLightboxesToStorage();
+  switchActiveLightbox(activeLightboxId);
+  showToast('info', 'Lightbox Deleted', 'Collection removed');
+}
+
 function switchActiveLightbox(id) {
   activeLightboxId = id;
+  saveLightboxesToStorage();
   const lb = getActiveLightbox();
 
   document.getElementById('activeLightboxTitle').textContent = lb.title;
@@ -1649,10 +1687,12 @@ function switchActiveLightbox(id) {
 
   renderLightboxTabs();
   renderLightbox();
+  renderCatalog();
 }
 
 function executeCreateLightbox() {
-  const title = document.getElementById('newLbTitle').value || 'Würth Q4 Automotive Campaign';
+  const titleInput = document.getElementById('newLbTitle');
+  const title = (titleInput ? titleInput.value.trim() : '') || 'Würth Q4 Automotive Campaign';
   const region = document.getElementById('newLbRegion').value || 'DE';
   const id = `lb-${Date.now()}`;
   const code = `LB-2026-${region}-${Math.floor(Math.random()*900+100)}`;
@@ -1667,6 +1707,9 @@ function executeCreateLightbox() {
   };
 
   ALL_LIGHTBOXES.push(newLb);
+  if (titleInput) titleInput.value = '';
+
+  saveLightboxesToStorage();
   switchActiveLightbox(id);
 
   closeModalDirect('newLightboxModal');
@@ -1688,6 +1731,7 @@ function addToLightbox(e, assetId) {
     document.getElementById('lbVersionStat').textContent = `v${activeLb.version}`;
     document.getElementById('sidebarLbBadge').textContent = `@v${activeLb.version}`;
 
+    saveLightboxesToStorage();
     renderLightboxTabs();
     renderLightbox();
     renderCatalog();
@@ -1736,6 +1780,7 @@ function renderLightbox() {
 
     card.addEventListener('click', () => {
       asset.selected = !asset.selected;
+      saveLightboxesToStorage();
       renderLightbox();
     });
 
@@ -1757,6 +1802,7 @@ function removeSelectedFromLightbox() {
     activeLb.version++;
     document.getElementById('lbVersionLabel').textContent = `@Version ${activeLb.version}`;
     document.getElementById('lbVersionStat').textContent = `v${activeLb.version}`;
+    saveLightboxesToStorage();
     renderLightboxTabs();
     renderLightbox();
     showToast('success', 'Assets Removed', `Removed ${removedCount} items from "${activeLb.title}" (@Version ${activeLb.version})`);
@@ -1772,7 +1818,10 @@ function switchView(name) {
   document.getElementById(`view-${name}`)?.classList.add('active');
   document.getElementById(`nav-${name}`)?.classList.add('active');
 
-  if (name === 'lightbox') renderLightbox();
+  if (name === 'lightbox') {
+    renderLightboxTabs();
+    renderLightbox();
+  }
 }
 
 function triggerFileInput() { document.getElementById('fileInput').click(); }
@@ -1843,24 +1892,6 @@ function quickPreview(e, assetId) {
 
 function closePreviewModal(e) {
   if (e.target === document.getElementById('previewModal')) closeModalDirect('previewModal');
-}
-
-function executeCreateLightbox() {
-  const title = document.getElementById('newLbTitle').value || 'Würth Q4 Automotive Campaign';
-  const region = document.getElementById('newLbRegion').value || 'DE';
-
-  document.getElementById('activeLightboxTitle').textContent = title;
-  document.getElementById('activeLightboxCode').textContent = `LB-2026-${region}-${Math.floor(Math.random()*900+100)}`;
-
-  LIGHTBOX_ASSETS = [];
-  currentLightboxVersion = 1;
-  document.getElementById('lbVersionLabel').textContent = '@Version 1';
-  document.getElementById('lbVersionStat').textContent = 'v1';
-  document.getElementById('sidebarLbBadge').textContent = '@v1';
-
-  renderLightbox();
-  closeModalDirect('newLightboxModal');
-  showToast('success', 'New Lightbox Created', `Created empty collection "${title}" (@Version 1)`);
 }
 
 function simulateConflict() {
@@ -1947,7 +1978,12 @@ function startExportSimulation() {
 function openProfileModal() { document.getElementById('profileModal').classList.add('open'); }
 function openFieldsModal() { document.getElementById('fieldsModal').classList.add('open'); }
 function openUploadModal() { document.getElementById('uploadModal').classList.add('open'); }
-function openNewLightboxModal() { document.getElementById('newLightboxModal').classList.add('open'); }
+function openNewLightboxModal() {
+  const input = document.getElementById('newLbTitle');
+  if (input) input.value = '';
+  document.getElementById('newLightboxModal').classList.add('open');
+  if (input) setTimeout(() => input.focus(), 100);
+}
 
 function closeModalDirect(id) { document.getElementById(id).classList.remove('open'); }
 function closeModalOnOverlay(e, id) { if (e.target === document.getElementById(id)) closeModalDirect(id); }
@@ -1965,9 +2001,9 @@ function triggerActualDownload() {
 }
 
 initTheme();
+loadLightboxesFromStorage();
 renderCatalog();
-renderLightboxTabs();
-renderLightbox();
+switchActiveLightbox(activeLightboxId);
 </script>
 </body>
 </html>
