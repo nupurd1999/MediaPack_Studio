@@ -1002,7 +1002,7 @@
         <div class="lightbox-title-wrap">
           <div class="lightbox-title">
             <span class="icon" style="color:var(--text-3);"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg></span>
-            <span id="activeLightboxTitle">Würth Q3 Fasteners Launch Assets</span>
+            <span id="activeLightboxTitle">Q3 Fasteners Launch Assets</span>
             <span class="pill pill-green">Active</span>
           </div>
           <div class="lightbox-meta">
@@ -1269,7 +1269,7 @@
         <div class="user-avatar" style="width: 52px; height: 52px; font-size: 1.2rem; font-weight: 800;">ND</div>
         <div>
           <div style="font-size: 1.1rem; font-weight: 800; color: var(--text);">Nupoor Dhamal</div>
-          <div style="font-size: 0.78rem; color: var(--text-3); margin-top: 0.1rem;">Senior Systems Lead — Würth Group</div>
+          <div style="font-size: 0.78rem; color: var(--text-3); margin-top: 0.1rem;">Senior Systems Lead — MediaPack Studio</div>
           <div style="display:flex; gap:0.4rem; margin-top:0.4rem;">
             <span class="pill pill-red">ADMIN</span>
             <span class="pill pill-green">JWT ACTIVE</span>
@@ -1315,7 +1315,7 @@
     </div>
     <div class="modal-body">
       <label class="form-label">Lightbox Title</label>
-      <input type="text" class="form-input" id="newLbTitle" placeholder="e.g. Nupur Test / Würth Q4 Campaign" />
+      <input type="text" class="form-input" id="newLbTitle" placeholder="e.g. Nupur Test / Automotive Q4 Campaign" />
 
       <label class="form-label">Collection Region (Multi-Tenant DB)</label>
       <select class="form-select" id="newLbRegion">
@@ -1378,7 +1378,7 @@
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem;">
         <div>
           <label class="form-label">SKU Code</label>
-          <input type="text" class="form-input" id="uploadSku" value="SKU-WURTH-8821" />
+          <input type="text" class="form-input" id="uploadSku" value="SKU-MP-8821" />
         </div>
         <div>
           <label class="form-label">Asset Title</label>
@@ -1470,11 +1470,11 @@ const ASSET_TYPES = [
 ];
 
 const FASTENER_PRODUCTS = [
-  { name: 'Würth M12x50 Hex Head Cap Screw DIN 933', sku: 'SKU-WURTH-8821', typeKey: 'CAD_3D', color: '#3B82F6', tag: 'fastener' },
-  { name: 'Stainless Steel A4 Lock Washer 10mm ISO 7089', sku: 'SKU-WURTH-1102', typeKey: 'IMAGE_PNG', color: '#10B981', tag: 'fastener' },
-  { name: 'Heavy-Duty Expansion Anchor Bolt M16x150', sku: 'SKU-WURTH-4491', typeKey: 'CAD_3D', color: '#8B5CF6', tag: 'fastener' },
-  { name: 'Würth Master 20V Cordless Impact Wrench', sku: 'SKU-WURTH-9912', typeKey: 'IMAGE_PNG', color: '#E30613', tag: 'tool' },
-  { name: 'Digital Torque Wrench 1/2" 20-200Nm', sku: 'SKU-WURTH-3341', typeKey: 'DOCUMENT_PDF', color: '#F59E0B', tag: 'tool' }
+  { name: 'Industrial M12x50 Hex Head Cap Screw DIN 933', sku: 'SKU-MP-8821', typeKey: 'CAD_3D', color: '#3B82F6', tag: 'fastener' },
+  { name: 'Stainless Steel A4 Lock Washer 10mm ISO 7089', sku: 'SKU-MP-1102', typeKey: 'IMAGE_PNG', color: '#10B981', tag: 'fastener' },
+  { name: 'Heavy-Duty Expansion Anchor Bolt M16x150', sku: 'SKU-MP-4491', typeKey: 'CAD_3D', color: '#8B5CF6', tag: 'fastener' },
+  { name: 'Pro-Series 20V Cordless Impact Wrench', sku: 'SKU-MP-9912', typeKey: 'IMAGE_PNG', color: '#E30613', tag: 'tool' },
+  { name: 'Digital Torque Wrench 1/2" 20-200Nm', sku: 'SKU-MP-3341', typeKey: 'DOCUMENT_PDF', color: '#F59E0B', tag: 'tool' }
 ];
 
 function generateAssets() {
@@ -1495,8 +1495,8 @@ function generateAssets() {
   for (let i = 1; i <= 7; i++) {
     list.push({
       id: `asset-gen-${i}`,
-      sku: `SKU-WURTH-${2000 + i}`,
-      name: `Würth Assembly Component Series ${i}`,
+      sku: `SKU-MP-${2000 + i}`,
+      name: `Precision Assembly Component Series ${i}`,
       type: ASSET_TYPES[i % ASSET_TYPES.length],
       color: '#3B82F6',
       w: 2048, h: 1536,
@@ -1709,7 +1709,7 @@ function setLayoutMode(mode) {
 let ALL_LIGHTBOXES = [
   {
     id: 'lb-1',
-    title: 'Würth Q3 Fasteners Launch Assets',
+    title: 'Q3 Fasteners Launch Assets',
     code: 'LB-2026-Q3-FASTENERS',
     region: 'DE',
     version: 4,
@@ -1717,7 +1717,7 @@ let ALL_LIGHTBOXES = [
   },
   {
     id: 'lb-2',
-    title: 'Würth Q4 Automotive Campaign',
+    title: 'Q4 Automotive Campaign',
     code: 'LB-2026-NL-635',
     region: 'NL',
     version: 1,
@@ -1739,7 +1739,12 @@ function loadLightboxesFromStorage() {
     const saved = localStorage.getItem('mediapack_all_lightboxes');
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) ALL_LIGHTBOXES = parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        ALL_LIGHTBOXES = parsed.map(lb => ({
+          ...lb,
+          title: (lb.title || '').replace(/Würth\s*/gi, '')
+        }));
+      }
     }
     const savedActive = localStorage.getItem('mediapack_active_lb_id');
     if (savedActive && ALL_LIGHTBOXES.some(l => l.id === savedActive)) {
@@ -1803,7 +1808,7 @@ function switchActiveLightbox(id) {
 
 function executeCreateLightbox() {
   const titleInput = document.getElementById('newLbTitle');
-  const title = (titleInput ? titleInput.value.trim() : '') || 'Würth Q4 Automotive Campaign';
+  const title = (titleInput ? titleInput.value.trim() : '') || 'Q4 Automotive Campaign';
   const region = document.getElementById('newLbRegion').value || 'DE';
   const id = `lb-${Date.now()}`;
   const code = `LB-2026-${region}-${Math.floor(Math.random()*900+100)}`;
