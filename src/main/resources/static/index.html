@@ -1595,12 +1595,15 @@ const ASSET_TYPES = [
 ];
 
 const FASTENER_PRODUCTS = [
-  { name: 'Industrial M12x50 Hex Head Cap Screw DIN 933', sku: 'SKU-MP-8821', typeKey: 'CAD_3D', color: '#3B82F6', tag: 'fastener' },
+  { name: 'Würth M8x30 Stainless Steel Hex Head Bolt DIN 933', sku: 'SKU-MP-8821', typeKey: 'IMAGE_PNG', color: '#3B82F6', tag: 'bolt' },
+  { name: 'Würth M8 High Tensile Flange Bolt ISO 4162', sku: 'SKU-MP-8822', typeKey: 'IMAGE_PNG', color: '#10B981', tag: 'bolt' },
+  { name: 'Industrial M12x50 Hex Head Cap Screw DIN 933', sku: 'SKU-MP-8823', typeKey: 'CAD_3D', color: '#3B82F6', tag: 'fastener' },
   { name: 'Stainless Steel A4 Lock Washer 10mm ISO 7089', sku: 'SKU-MP-1102', typeKey: 'IMAGE_PNG', color: '#10B981', tag: 'fastener' },
-  { name: 'Heavy-Duty Expansion Anchor Bolt M16x150', sku: 'SKU-MP-4491', typeKey: 'CAD_3D', color: '#8B5CF6', tag: 'fastener' },
+  { name: 'Heavy-Duty Expansion Anchor Bolt M16x150', sku: 'SKU-MP-4491', typeKey: 'CAD_3D', color: '#8B5CF6', tag: 'bolt' },
   { name: 'Pro-Series 20V Cordless Impact Wrench', sku: 'SKU-MP-9912', typeKey: 'IMAGE_PNG', color: '#E30613', tag: 'tool' },
-  { name: 'Digital Torque Wrench 1/2" 20-200Nm', sku: 'SKU-MP-3341', typeKey: 'DOCUMENT_PDF', color: '#F59E0B', tag: 'tool' }
+  { name: 'Digital Torque Wrench 1/2" 20-200Nm Datasheet', sku: 'SKU-MP-3341', typeKey: 'DOCUMENT_PDF', color: '#F59E0B', tag: 'tool' }
 ];
+
 
 function generateAssets() {
   const list = [];
@@ -1763,11 +1766,17 @@ function renderCatalog() {
   grid.innerHTML = '';
 
   const activeLb = getActiveLightbox();
+  const qWords = catalogSearchQuery ? catalogSearchQuery.trim().split(/\s+/).filter(w => w.length > 0) : [];
   const filtered = CATALOG_ASSETS.filter(a => {
-    const matchesSearch = !catalogSearchQuery || a.name.toLowerCase().includes(catalogSearchQuery) || a.sku.toLowerCase().includes(catalogSearchQuery) || (a.tag && a.tag.toLowerCase().includes(catalogSearchQuery));
+    const matchesSearch = qWords.length === 0 || qWords.some(w =>
+      a.name.toLowerCase().includes(w) ||
+      a.sku.toLowerCase().includes(w) ||
+      (a.tag && a.tag.toLowerCase().includes(w))
+    );
     const matchesFilter = activeFilterTypes.size === 0 || activeFilterTypes.has(a.type.key) || (a.tag && activeFilterTypes.has(a.tag));
     return matchesSearch && matchesFilter;
   });
+
 
   document.getElementById('gridMatchCount').textContent = filtered.length;
 
@@ -2223,10 +2232,17 @@ async function executeCatalogSearch() {
         `Solr Query: q=${translation.queryTerm || '*:*'} | fileType=${translation.fileType || 'NONE'} | tag=${translation.tag || 'NONE'}`;
       document.getElementById('aiSearchBanner').style.display = 'block';
 
-      if (data.searchResults && data.searchResults.hits) {
-        showToast('success', 'Smart Search Completed', `Found ${data.searchResults.total || 0} matching items`);
+      // Apply AI translated parameters to UI grid filters
+      catalogSearchQuery = (translation.queryTerm && translation.queryTerm !== '*:*') ? translation.queryTerm.toLowerCase() : '';
+      activeFilterTypes.clear();
+      if (translation.fileType && translation.fileType !== 'NONE' && translation.fileType !== '') {
+        activeFilterTypes.add(translation.fileType);
       }
+      renderCatalog();
+
+      showToast('success', 'Smart Search Completed', `Displaying ${document.getElementById('gridMatchCount').textContent} matching items`);
     }
+
   } catch (err) {
     console.error('Smart search failed:', err);
     showToast('warning', 'Smart Search Failed', 'Falling back to standard keyword search');

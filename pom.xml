@@ -72,6 +72,14 @@
             <version>${solr.version}</version>
         </dependency>
 
+        <!-- Jetty Client for SolrJ -->
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-client</artifactId>
+            <version>11.0.20</version>
+        </dependency>
+
+
         <!-- Jackson JSR310 module for Java Instant / LocalDateTime support in JSON + Redis serializers -->
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>

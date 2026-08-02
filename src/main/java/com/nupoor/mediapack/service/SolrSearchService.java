@@ -51,9 +51,10 @@ public class SolrSearchService {
             client.add(doc);
             client.commit();
             log.info("Indexed asset [{}] (sku={}) into Solr", asset.getId(), asset.getSku());
-        } catch (Exception e) {
+        } catch (Throwable e) {
             log.warn("Solr indexing skipped (Solr offline?): {}", e.getMessage());
         }
+
     }
 
     /**
@@ -126,9 +127,10 @@ public class SolrSearchService {
 
             log.info("Solr search [q={}, fq={}] returned {} hits", queryTerm, filterQueries, hits.size());
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             log.warn("Solr search failed (Solr offline?): {}", e.getMessage());
         }
+
 
         return result;
     }
