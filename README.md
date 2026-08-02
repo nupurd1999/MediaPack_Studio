@@ -4,7 +4,7 @@
 
 # MediaPack Studio
 
-### Distributed Bulk Asset Packaging & Multi-Tenant Media Engine
+### Distributed Bulk Asset Packaging, Multi-Tenant Engine & Gemma 4 31B AI Integration
 
 *High-performance Java 21 / Spring Boot 3 microservice for enterprise-scale digital asset management*
 
@@ -12,6 +12,7 @@
 
 [![Java 21](https://img.shields.io/badge/Java-21-FF6B35?style=flat-square&logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2.5-6DB33F?style=flat-square&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Gemma 4 31B](https://img.shields.io/badge/Gemma_4_31B-Google_Gemini_API-8E44AD?style=flat-square&logo=google&logoColor=white)](https://ai.google.dev/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-6.0-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![Redis](https://img.shields.io/badge/Redis-7.0-DC382D?style=flat-square&logo=redis&logoColor=white)](https://redis.io/)
 [![Apache Solr](https://img.shields.io/badge/Apache_Solr-9.2-D9411E?style=flat-square&logo=apache&logoColor=white)](https://solr.apache.org/)
@@ -21,7 +22,7 @@
 
 <br/>
 
-[🚀 Quick Start](#-getting-started) · [🏗️ Architecture](#️-system-architecture) · [🔌 API Reference](#-api-reference) · [🧪 Testing](#-testing) · [🐳 Docker Setup](#-docker-compose-local-setup)
+[🚀 Quick Start](#-getting-started) · [🏗️ Architecture](#️-system-architecture) · [🤖 AI Capabilities](#-gemma-4-31b-ai-integration) · [🔌 API Reference](#-api-reference) · [🧪 Testing](#-testing) · [🐳 Docker Setup](#-docker-compose-local-setup)
 
 ---
 
@@ -31,7 +32,7 @@
 
 **MediaPack Studio** is a production-grade Spring Boot microservice engineered for large-scale **Digital Asset Management (DAM)** in enterprise e-commerce environments — inspired by real-world engineering challenges at global industrial companies like the **Würth Group**.
 
-It tackles five deeply technical backend problems simultaneously:
+It tackles six deeply technical backend problems simultaneously:
 
 | # | Problem Solved | Technology Used |
 |---|----------------|-----------------|
@@ -39,9 +40,10 @@ It tackles five deeply technical backend problems simultaneously:
 | 2 | Non-blocking ZIP export of multi-GB media bundles | Redis Queue + `@Async` + `ZipOutputStream` streaming |
 | 3 | Concurrent lightbox edit safety across distributed users | MongoDB `@Version` Optimistic Locking |
 | 4 | Real-time download progress visibility | Spring WebSockets (STOMP) |
-| 5 | Secure cloud media delivery | AWS S3 Pre-Signed URLs (24h TTL) |
+| 5 | AI-powered asset enrichment & natural language search | Google Gemini API (`gemma-4-31b-it`) |
+| 6 | Secure cloud media delivery | AWS S3 Pre-Signed URLs (24h TTL) |
 
-> **Stack:** Java 21 · Spring Boot 3.2 · MongoDB 6 · Redis 7 · Apache Solr 9.2 · AWS SDK v2 · LocalStack · Docker Compose
+> **Stack:** Java 21 · Spring Boot 3.2 · Google Gemini API (Gemma 4 31B) · MongoDB 6 · Redis 7 · Apache Solr 9.2 · AWS SDK v2 · LocalStack · Docker Compose
 
 ---
 
@@ -50,6 +52,13 @@ It tackles five deeply technical backend problems simultaneously:
 ```mermaid
 graph TD
     User["🧑‍💼 Enterprise User / Branch Manager"] -->|JWT + X-Tenant-Region: DE| GW[Spring Boot API Controller]
+
+    subgraph AI Intelligence Layer
+        GW --> AIService["GeminiAiService<br/>Gemma 4 31B (gemma-4-31b-it)"]
+        AIService -->|Natural Language Search| SolrService
+        AIService -->|Auto Metadata Enrichment| GW
+        AIService -->|Smart Campaign Builder| LightboxService
+    end
 
     subgraph Multi-Tenant Database Layer
         GW --> Router["MultiTenantMongoConfig<br/>TenantContext Dynamic Resolution"]
@@ -131,9 +140,40 @@ High-speed full-text and faceted search across millions of product assets — fi
 
 ---
 
-### ☁️ 6. LocalStack S3 Offline Compatibility
+### 🤖 6. Gemma 4 31B AI Engine (Google Gemini API)
 
-Fully testable locally via **LocalStack S3 emulator** in `docker-compose.yml` — no AWS credentials or cloud account required for development and CI pipelines.
+Centralized `GeminiAiService` powering 4 intelligent microservice features using **`gemma-4-31b-it`**:
+
+1. **Automated Asset Metadata Enrichment**: Generates localized descriptions, alt text, and multi-lingual tags based on SKU attributes and regional context.
+2. **Smart AI Search (Natural Language Solr Compiler)**: Translates plain natural language search queries (*"find heavy duty expansion anchor bolts for spring assembly"*) into structured Solr query parameters (`q=...&fileType=...`).
+3. **Smart Lightbox Campaign Builder**: Evaluates campaign briefs to auto-curate collections, generate targeted titles & descriptions, and match catalog asset SKUs.
+4. **Export Manifest Generation**: Produces structured AI metadata summary manifests included in media package exports.
+
+---
+
+### ☁️ 7. LocalStack S3 Offline Compatibility
+
+Fully testable locally via **LocalStack S3 emulator** in `docker-compose.yml` — no cloud account required for local development and CI pipelines.
+
+---
+
+## 🤖 Gemma 4 31B AI Integration
+
+The microservice integrates **Gemma 4 31B** via a resilient service layer with thought-token filtering, fallback handling, and secure API key management:
+
+```yaml
+# application-local.yml
+gemini:
+  api:
+    key: ${GEMINI_API_KEY}
+    model: ${GEMINI_MODEL:gemma-4-31b-it}
+```
+
+### Features at a Glance:
+
+- **Thought-Token Extraction**: Filters out intermediate reasoning blocks (`"thought": true`) returned by instruction-tuned Gemma models to parse clean JSON responses.
+- **Offline Resiliency**: Automatically falls back to deterministic rule-based generators when MongoDB or external API endpoints are offline.
+- **Non-Blocking UI Execution**: Frontend uses optimistic UI state updates so campaign generation and metadata enrichment respond instantly.
 
 ---
 
@@ -143,6 +183,7 @@ Fully testable locally via **LocalStack S3 emulator** in `docker-compose.yml` �
 
 - **Docker Desktop** 24+ ([download](https://www.docker.com/products/docker-desktop/))
 - **Java 21** (for local Maven builds only)
+- **Google Gemini API Key** (optional, for live AI features)
 
 ### ⚡ 1-Command Launch
 
@@ -151,14 +192,14 @@ Spin up the full infrastructure stack — Spring Boot app, MongoDB, Redis, Apach
 ```bash
 git clone https://github.com/your-username/mediapack-studio.git
 cd mediapack-studio
-docker-compose up --build
+GEMINI_API_KEY="your-gemini-api-key" docker-compose up --build
 ```
 
 ### Access Points
 
 | Service | URL |
 |---------|-----|
-| 🖥️ **WebSocket Monitor Dashboard** | http://localhost:8080 |
+| 🖥️ **WebSocket & DAM Studio Dashboard** | http://localhost:8080 |
 | 🔌 **Spring Boot REST API** | http://localhost:8080/api |
 | 🔍 **Apache Solr Admin UI** | http://localhost:8983/solr |
 | ☁️ **LocalStack S3 Endpoint** | http://localhost:4566 |
@@ -167,7 +208,54 @@ docker-compose up --build
 
 ## 🔌 API Reference
 
-All endpoints require the `X-Tenant-Region` header for multi-tenant routing.
+All endpoints require the `X-Tenant-Region` header for multi-tenant database routing.
+
+<details>
+<summary><b>🤖 Gemini AI Endpoints (Gemma 4 31B)</b></summary>
+
+<br/>
+
+### Enrich Asset Metadata
+
+```http
+POST /api/ai/enrich-asset
+X-Tenant-Region: DE
+Content-Type: application/json
+```
+
+```json
+{
+  "sku": "SKU-MP-8821",
+  "fileName": "M8x30 Stainless Steel Hex Head Bolt.png",
+  "fileType": "IMAGE_PNG",
+  "sizeInBytes": 2048000,
+  "width": 3840,
+  "height": 2160,
+  "tags": ["bolt", "m8"]
+}
+```
+
+### Smart AI Search (Solr Query Translation)
+
+```http
+GET /api/ai/smart-search?prompt=find+high+strength+stainless+steel+bolts
+X-Tenant-Region: DE
+```
+
+### Smart Lightbox Campaign Builder
+
+```http
+POST /api/ai/generate-lightbox?prompt=Assemble+a+spring+industrial+fasteners+collection&ownerUserId=NupoorD
+X-Tenant-Region: DE
+```
+
+### Check Gemini API Status
+
+```http
+GET /api/ai/status
+```
+
+</details>
 
 <details>
 <summary><b>📁 Asset Management Endpoints</b></summary>
@@ -202,8 +290,6 @@ GET /api/assets
 X-Tenant-Region: NL
 ```
 
-> Routes query automatically to `media_catalog_nl` database.
-
 </details>
 
 <details>
@@ -224,8 +310,6 @@ X-Tenant-Region: DE
 POST /api/lightboxes/{id}/assets/{assetId}
 X-Tenant-Region: DE
 ```
-
-> Each successful update increments the document `version` field. Stale concurrent writes will throw `OptimisticLockingFailureException`.
 
 </details>
 
@@ -255,16 +339,6 @@ Content-Type: application/json
 Topic: /topic/export-progress/job-export-101
 ```
 
-**Progress Event:**
-```json
-{ "jobId": "job-export-101", "progressPercent": 75, "status": "PROCESSING", "downloadUrl": null }
-```
-
-**Completion Event:**
-```json
-{ "jobId": "job-export-101", "progressPercent": 100, "status": "COMPLETED", "downloadUrl": "https://s3.amazonaws.com/..." }
-```
-
 </details>
 
 ---
@@ -276,6 +350,7 @@ Topic: /topic/export-progress/job-export-101
 
 ```java
 @Document(collection = "media_assets")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MediaAsset {
     @Id
     private String id;
@@ -285,7 +360,7 @@ public class MediaAsset {
 
     private String fileName;
     private String s3Key;
-    private String fileType;         // "IMAGE_PNG", "DOCUMENT_PDF", "VIDEO_MP4"
+    private String fileType;         // "IMAGE_PNG", "DOCUMENT_PDF", "CAD_3D"
     private long   sizeInBytes;
     private int    width;
     private int    height;
@@ -323,8 +398,6 @@ public class CollaborativeLightbox {
 
 ## 🐳 Docker Compose Local Setup
 
-The `docker-compose.yml` provisions the complete local environment:
-
 ```yaml
 services:
   mediapack-app:    # Spring Boot 3 Application  → :8080
@@ -342,6 +415,8 @@ services:
 | `SPRING_REDIS_HOST` | `redis` |
 | `SOLR_URL` | `http://solr:8983/solr/product_media` |
 | `AWS_S3_ENDPOINT` | `http://localstack:4566` |
+| `GEMINI_API_KEY` | `${GEMINI_API_KEY}` |
+| `GEMINI_MODEL` | `gemma-4-31b-it` |
 | `SPRING_PROFILES_ACTIVE` | `local` |
 
 ---
@@ -361,15 +436,12 @@ The test suite includes a critical concurrent-edit test verifying that `Optimist
 ```java
 @Test
 void testCollaborativeLightbox_ConcurrentEdit_TriggersOptimisticLockingFailure() {
-    // Both clients load the same lightbox at version 0
     CollaborativeLightbox client1View = lightboxRepository.findById(saved.getId()).get();
     CollaborativeLightbox client2View = lightboxRepository.findById(saved.getId()).get();
 
-    // Client 1 saves successfully → version increments to 1
     client1View.setTitle("Würth Tools Q3 - Updated by Client 1");
     lightboxRepository.save(client1View);
 
-    // Client 2 attempts to save stale version 0 → THROWS
     client2View.setTitle("Würth Tools Q3 - Conflicting Edit by Client 2");
     assertThrows(OptimisticLockingFailureException.class, () -> {
         lightboxRepository.save(client2View);
@@ -390,19 +462,23 @@ mediapack-studio/
 │   │   │   │   └── tenant/
 │   │   │   │       ├── TenantContext.java           # ThreadLocal tenant holder
 │   │   │   │       └── MultiTenantMongoConfig.java  # Dynamic MongoDB router
+│   │   │   ├── controller/
+│   │   │   │   └── GeminiAiController.java          # AI feature endpoints
 │   │   │   ├── model/
 │   │   │   │   ├── MediaAsset.java                  # Asset metadata document
 │   │   │   │   └── CollaborativeLightbox.java        # Optimistic locking document
 │   │   │   └── service/
+│   │   │       ├── GeminiAiService.java              # Gemma 4 31B AI Service layer
 │   │   │       └── AsyncMediaPackagerWorker.java     # ZIP export + WebSocket progress
 │   │   └── resources/
 │   │       └── static/
-│   │           └── index.html                       # WebSocket monitor dashboard
+│   │           └── index.html                       # WebSocket & DAM Studio dashboard
 │   └── test/
 │       └── java/com/nupoor/mediapack/
-│           └── MediaAssetControllerTest.java         # JUnit 5 test suite
+│           └── GeminiAiControllerTest.java           # AI feature test suite
 ├── Dockerfile
 ├── docker-compose.yml
+├── .env.example
 └── pom.xml
 ```
 
@@ -410,10 +486,11 @@ mediapack-studio/
 
 ## 🛠️ Technology Stack
 
-| Layer | Technology | Version |
-|-------|-----------|---------|
+| Layer | Technology | Version / Model |
+|-------|-----------|-----------------|
 | **Language** | Java | 21 (LTS) |
 | **Framework** | Spring Boot | 3.2.5 |
+| **AI Intelligence** | Google Gemini API (Gemma 4 31B) | `gemma-4-31b-it` |
 | **Database** | MongoDB | 6.0 |
 | **Cache / Queue** | Redis | 7 Alpine |
 | **Search Engine** | Apache Solr | 9.2 |
@@ -428,16 +505,19 @@ mediapack-studio/
 
 ## ✅ Feature Checklist
 
-- [x] Mermaid System Architecture Diagram
+- [x] Mermaid System Architecture Diagram with AI Layer
 - [x] 1-Command Local Launch (`docker-compose up`) with LocalStack S3 & Solr
 - [x] Dynamic `AbstractMongoFactory` Multi-Tenant Resolver (`DE`, `NL`, `US`)
+- [x] Google Gemini API (`gemma-4-31b-it`) Multi-lingual Asset Enrichment
+- [x] Natural Language Solr Compiler for Smart AI Search
+- [x] Smart AI Lightbox Campaign Builder with Non-Blocking UI Execution
 - [x] MongoDB `@Version` Optimistic Locking — Collaborative Lightboxes
 - [x] Redis Async Task Executor with WebSockets STOMP Progress Streaming
 - [x] AWS S3 Pre-Signed Download URL Generation (24h TTL)
 - [x] Apache Solr Faceted Search & Metadata Filter Configuration
 - [x] Memory-Efficient ZIP Streaming (`< 512MB` for multi-GB exports)
 - [x] LocalStack Offline AWS Compatibility (no cloud account required)
-- [x] JUnit 5 Concurrent Edit & Optimistic Locking Test Coverage
+- [x] JUnit 5 Test Coverage for All Services & AI Controllers
 
 ---
 
@@ -445,7 +525,7 @@ mediapack-studio/
 
 **Nupoor Dhamal** — Senior Java Backend Developer
 
-*Specializing in enterprise Java microservices, distributed systems, and industrial e-commerce backend architecture.*
+*Specializing in enterprise Java microservices, distributed systems, AI integrations, and industrial e-commerce backend architecture.*
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://linkedin.com/in/your-profile)
 [![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/your-username)
@@ -454,6 +534,6 @@ mediapack-studio/
 
 <div align="center">
 
-*Built with ☕ Java 21, 🍃 Spring Boot 3, and ❤️ for clean distributed systems engineering.*
+*Built with ☕ Java 21, 🍃 Spring Boot 3, 🤖 Gemma 4 31B, and ❤️ for clean distributed systems engineering.*
 
 </div>
