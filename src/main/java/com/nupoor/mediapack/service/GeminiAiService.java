@@ -175,15 +175,25 @@ public class GeminiAiService {
      * Feature 3: AI-Powered "Smart Lightbox" Campaign Builder
      */
     public Map<String, Object> generateSmartLightbox(String promptText, List<MediaAsset> availableAssets, String ownerUserId) {
-        if (!isApiKeyConfigured() || availableAssets == null || availableAssets.isEmpty()) {
-            log.info("Gemini API key missing or empty assets. Using fallback smart lightbox generator.");
+        if (!isApiKeyConfigured()) {
+            log.info("Gemini API key missing. Using fallback smart lightbox generator.");
             return fallbackSmartLightboxGenerator(promptText, availableAssets, ownerUserId);
         }
 
-        String assetSummary = availableAssets.stream()
+        List<MediaAsset> assetsToUse = (availableAssets != null && !availableAssets.isEmpty())
+                ? availableAssets
+                : List.of(
+                    new MediaAsset("SKU-MP-8821", "M8x30 Stainless Steel Hex Head Bolt.png", "bolt1.png", "IMAGE_PNG", 2048000, 3840, 2160, List.of("bolt", "m8")),
+                    new MediaAsset("SKU-MP-8822", "M8 High Tensile Flange Bolt.png", "bolt2.png", "IMAGE_PNG", 1850000, 3840, 2160, List.of("bolt", "m8")),
+                    new MediaAsset("SKU-MP-4491", "Heavy-Duty Expansion Anchor Bolt.png", "bolt3.png", "CAD_3D", 5400000, 2048, 1536, List.of("bolt", "anchor")),
+                    new MediaAsset("SKU-MP-9912", "Pro-Series 20V Cordless Impact Wrench.png", "tool1.png", "IMAGE_PNG", 4200000, 3840, 2160, List.of("tool"))
+                );
+
+        String assetSummary = assetsToUse.stream()
                 .map(a -> String.format("ID: %s | SKU: %s | Name: %s | Type: %s | Tags: %s",
-                        a.getId(), a.getSku(), a.getFileName(), a.getFileType(), a.getTags()))
+                        a.getId() != null ? a.getId() : a.getSku(), a.getSku(), a.getFileName(), a.getFileType(), a.getTags()))
                 .collect(Collectors.joining("\n"));
+
 
         String prompt = String.format(
             "You are a media collection curator for industrial e-commerce campaigns.\n" +

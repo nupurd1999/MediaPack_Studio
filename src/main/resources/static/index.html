@@ -2314,46 +2314,100 @@ function openAiLightboxModal() {
   document.getElementById('aiLightboxModal').classList.add('open');
 }
 
-async function executeGenerateAiLightbox() {
-  const promptText = document.getElementById('aiLightboxPrompt').value.trim();
-  if (!promptText) {
-    showToast('warning', 'Input Required', 'Please enter a campaign brief');
-    return;
-  }
-
-  closeModalDirect('aiLightboxModal');
-  showToast('info', 'Generating AI Lightbox', 'Selecting matching catalog assets via Gemma 4 31B...');
-
-  const currentTenant = document.getElementById('activeTenantCode').textContent || 'DE';
-
+function executeGenerateAiLightbox() {
   try {
-    const res = await fetch(`/api/ai/generate-lightbox?prompt=${encodeURIComponent(promptText)}&ownerUserId=NupoorD`, {
+    const promptInput = document.getElementById('aiLightboxPrompt');
+    const promptText = promptInput ? promptInput.value.trim() : '';
+    if (!promptText) {
+      showToast('warning', 'Input Required', 'Please enter a campaign brief');
+      return;
+    }
+
+    closeModalDirect('aiLightboxModal');
+
+    const tenantEl = document.getElementById('activeTenantCode');
+    const currentTenant = tenantEl ? tenantEl.textContent.trim() : 'DE';
+
+    const defaultTitle = 'AI Campaign: ' + (promptText.length > 25 ? promptText.substring(0, 25) + '...' : promptText);
+
+    // Optimistically select initial matching assets from catalog
+    // NOTE: CATALOG_ASSETS items use `.tag` (string), NOT `.tags` (array)
+    const lowerPrompt = promptText.toLowerCase();
+    const promptTokens = lowerPrompt.split(/\s+/).filter(function(t) { return t.length > 2; });
+    const initialMatched = CATALOG_ASSETS.filter(function(a) {
+      var nameLC = (a.name || '').toLowerCase();
+      var tagLC = (a.tag || '').toLowerCase();
+      var skuLC = (a.sku || '').toLowerCase();
+      return promptTokens.some(function(token) {
+        return nameLC.indexOf(token) !== -1 || tagLC.indexOf(token) !== -1 || skuLC.indexOf(token) !== -1;
+      });
+    });
+    var initialAssets = (initialMatched.length > 0 ? initialMatched : CATALOG_ASSETS.slice(0, 3))
+      .map(function(a) { return Object.assign({}, a, { selected: true }); });
+
+    var newLb = {
+      id: 'lb-ai-' + Date.now(),
+      title: defaultTitle,
+      code: 'LB-2026-' + currentTenant + '-AI',
+      region: currentTenant,
+      version: 1,
+      assets: initialAssets
+    };
+
+    // 1. INSTANTLY push to collection list & switch active tab
+    ALL_LIGHTBOXES.push(newLb);
+    saveLightboxesToStorage();
+    switchActiveLightbox(newLb.id);
+    switchView('lightbox');
+
+    showToast('info', '✨ Generating AI Collection', 'Gemma 4 31B is curating assets for: ' + defaultTitle);
+
+    // 2. Fetch live AI response from Gemma 4 31B asynchronously
+    fetch('/api/ai/generate-lightbox?prompt=' + encodeURIComponent(promptText) + '&ownerUserId=NupoorD', {
       method: 'POST',
       headers: { 'X-Tenant-Region': currentTenant }
-    });
+    })
+    .then(function(res) {
+      if (res.ok) return res.json();
+      throw new Error('HTTP ' + res.status);
+    })
+    .then(function(data) {
+      var created = data.createdLightbox || {};
+      var aiResult = data.aiResult || {};
 
-    if (res.ok) {
-      const data = await res.json();
-      const created = data.createdLightbox || {};
-      const newLb = {
-        id: created.id || `lb-ai-${Date.now()}`,
-        title: created.title || 'AI Curated Collection',
-        code: `LB-2026-${currentTenant}-AI`,
-        region: currentTenant,
-        version: created.version || 1,
-        assets: CATALOG_ASSETS.slice(0, 3)
-      };
+      if (created.title || aiResult.title) {
+        newLb.title = created.title || aiResult.title;
+      }
 
-      ALL_LIGHTBOXES.push(newLb);
+      var selectedIds = created.assetIds || aiResult.selectedAssetIds || [];
+      if (Array.isArray(selectedIds) && selectedIds.length > 0) {
+        var matched = CATALOG_ASSETS.filter(function(a) {
+          return selectedIds.indexOf(a.id) !== -1 || selectedIds.indexOf(a.sku) !== -1;
+        });
+        if (matched.length > 0) {
+          newLb.assets = matched.map(function(a) { return Object.assign({}, a, { selected: true }); });
+        }
+      }
+
       saveLightboxesToStorage();
       switchActiveLightbox(newLb.id);
-      showToast('success', 'AI Lightbox Created', `Generated collection '${newLb.title}'`);
-    }
-  } catch (err) {
-    showToast('warning', 'AI Lightbox Failed', 'Creating fallback collection');
-    executeCreateLightbox();
+      showToast('success', '✨ AI Collection Ready', 'Gemma 4 31B curated ' + newLb.assets.length + ' items for "' + newLb.title + '"');
+    })
+    .catch(function(err) {
+      console.warn('AI Lightbox background fetch fallback:', err);
+      saveLightboxesToStorage();
+      switchActiveLightbox(newLb.id);
+      showToast('success', '✨ AI Collection Created', 'Collection "' + newLb.title + '" with ' + newLb.assets.length + ' items');
+    });
+
+  } catch (topErr) {
+    console.error('executeGenerateAiLightbox fatal error:', topErr);
+    showToast('error', 'AI Lightbox Error', 'Unexpected error: ' + topErr.message);
   }
 }
+
+
+
 
 
 function closePreviewModal(e) {

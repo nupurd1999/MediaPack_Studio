@@ -5,7 +5,9 @@ spring:
     active: local
   data:
     mongodb:
-      uri: mongodb://admin:secret@localhost:27017/media_catalog_de?authSource=admin
+      uri: mongodb://admin:secret@localhost:27017/media_catalog_de?authSource=admin&serverSelectionTimeoutMS=1000&connectTimeoutMS=1000
+
+
 
     redis:
       host: localhost
