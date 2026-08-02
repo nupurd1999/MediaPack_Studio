@@ -1,0 +1,19 @@
+# Environment variables & secrets
+.env
+*.env
+*.pem
+*.key
+
+# Maven build directory
+target/
+*.class
+
+# IDE and OS settings
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log

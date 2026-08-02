@@ -23,6 +23,8 @@
         <solr.version>9.5.0</solr.version>
     </properties>
 
+
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -58,11 +60,10 @@
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>
+            <version>${aws.sdk.version}</version>
         </dependency>
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>s3-presigner</artifactId>
-        </dependency>
+
+
 
         <!-- Apache SolrJ Client -->
         <dependency>

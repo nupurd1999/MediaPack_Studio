@@ -798,6 +798,10 @@
 
     <!-- Controls -->
     <div class="header-controls">
+      <div id="aiStatusBadge" class="btn btn-ghost" style="font-size:0.75rem; gap:0.4rem; padding:0.35rem 0.75rem; border-color:var(--purple); color:var(--purple); cursor:pointer;" onclick="showAiStatusInfo()" title="Gemma 4 31B API Status">
+        <span class="icon">✨</span> <span id="aiStatusLabel">Gemma 4 31B</span>
+      </div>
+
       <div class="theme-toggle" onclick="toggleTheme()">
         <span class="icon" id="themeIconMoon"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></span>
         <div class="toggle-track" id="themeTrack">
@@ -925,19 +929,39 @@
         </div>
       </div>
 
-      <!-- Dedicated Full-Width Catalog Search Input Bar -->
+      <!-- Dedicated Catalog Search Input Bar with Smart AI Search -->
       <div style="padding: 0 1.5rem;">
-        <div class="dedicated-search-box" style="margin-top: 0.75rem; margin-bottom: 0.75rem;">
-          <span class="dedicated-search-icon icon">
-            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          </span>
-          <input class="dedicated-search-input" type="text" placeholder="Search catalog by asset name, SKU, or tags..." id="catalogSearch" oninput="handleCatalogSearch(this.value)" />
-          <span class="dedicated-search-clear icon" id="catalogSearchClear" onclick="clearCatalogSearch()" title="Clear Search">
-            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </span>
-          <span class="dedicated-search-kbd">Ctrl K</span>
+        <div style="display:flex; gap:0.5rem; align-items:center; margin-top: 0.75rem; margin-bottom: 0.75rem;">
+          <div class="dedicated-search-box" style="flex:1;">
+            <span class="dedicated-search-icon icon">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </span>
+            <input class="dedicated-search-input" type="text" placeholder="Search catalog by name, SKU, tags or type natural language..." id="catalogSearch" onkeydown="if(event.key==='Enter') executeCatalogSearch()" oninput="handleCatalogSearch(this.value)" />
+            <span class="dedicated-search-clear icon" id="catalogSearchClear" onclick="clearCatalogSearch()" title="Clear Search">
+              <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </span>
+            <span class="dedicated-search-kbd">Enter ↵</span>
+          </div>
+          <button id="smartSearchToggleBtn" class="btn btn-ghost" style="height:46px; border-color:var(--purple); color:var(--purple); gap:0.4rem;" onclick="toggleSmartSearchMode()">
+            <span class="icon">✨</span> <span id="smartSearchBtnText">Smart AI Search: OFF</span>
+          </button>
+        </div>
+
+        <!-- AI Solr Query Translation Banner -->
+        <div id="aiSearchBanner" style="display:none; background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.35); border-radius:var(--radius-md); padding:0.65rem 0.85rem; margin-bottom:0.75rem; font-size:0.78rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-weight:700; color:var(--purple); display:flex; align-items:center; gap:0.4rem;">
+              <span>✨ Gemma 4 31B Solr Compiler:</span>
+              <span id="aiTranslationExplanation" style="font-weight:400; color:var(--text-2);">...</span>
+            </div>
+            <span style="cursor:pointer; font-weight:700; color:var(--text-3);" onclick="document.getElementById('aiSearchBanner').style.display='none'">✕</span>
+          </div>
+          <div style="margin-top:0.35rem; font-family:var(--font-mono); font-size:0.72rem; color:var(--text-3);" id="aiTranslationParams">
+            Solr query: q=*:*
+          </div>
         </div>
       </div>
+
 
       <div class="catalog-layout" style="flex:1; min-height:0;">
         <!-- Filter Sidebar -->
@@ -1020,6 +1044,7 @@
           <div class="page-subtitle">Shared media collections with MongoDB @Version optimistic locking</div>
         </div>
         <div class="page-actions">
+          <button class="btn btn-ghost" style="border-color:var(--purple); color:var(--purple);" onclick="openAiLightboxModal()"><span class="icon">✨</span> Generate AI Lightbox</button>
           <button class="btn btn-ghost" onclick="openNewLightboxModal()"><span class="icon"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></span> New Lightbox</button>
         </div>
       </div>
@@ -1452,12 +1477,81 @@
           <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-2);" id="previewSize">—</div>
         </div>
       </div>
+
+      <!-- AI Enriched Metadata Panel -->
+      <div id="aiEnrichPanel" style="display:none; margin-top:0.75rem; text-align:left; background:rgba(139,92,246,0.08); border:1px solid rgba(139,92,246,0.3); border-radius:var(--radius-md); padding:0.85rem;">
+        <div style="font-weight:700; font-size:0.8rem; color:var(--purple); margin-bottom:0.4rem; display:flex; align-items:center; gap:0.4rem;">
+          <span>✨ Gemma 4 31B Enriched Metadata:</span>
+          <span id="aiEnrichModeBadge" class="pill pill-gray" style="font-size:0.65rem;">Regional Context</span>
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-2); margin-bottom:0.35rem;" id="aiEnrichDesc">...</div>
+        <div style="font-size:0.72rem; color:var(--text-3); font-style:italic; margin-bottom:0.45rem;" id="aiEnrichAlt">Alt text: ...</div>
+        <div style="display:flex; flex-wrap:wrap; gap:0.3rem;" id="aiEnrichTags"></div>
+      </div>
     </div>
     <div class="modal-footer">
+      <button class="btn btn-ghost" style="border-color:var(--purple); color:var(--purple);" id="btnEnrichAi" onclick="enrichCurrentPreviewAsset()"><span class="icon">✨</span> Enrich with Gemma AI</button>
       <button class="btn btn-ghost" onclick="closeModalDirect('previewModal')">Close</button>
     </div>
   </div>
 </div>
+
+
+<!-- AI GENERATE LIGHTBOX MODAL -->
+<div class="modal-overlay" id="aiLightboxModal" onclick="closeModalOnOverlay(event, 'aiLightboxModal')">
+  <div class="modal-card" style="max-width: 520px;">
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--purple); font-weight:800;">
+        <span class="icon">✨</span> Generate AI Campaign Lightbox
+      </div>
+      <button class="modal-close" onclick="closeModalDirect('aiLightboxModal')"><span class="icon"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span></button>
+    </div>
+    <div class="modal-body">
+      <label class="form-label">Campaign Brief / Natural Language Prompt</label>
+      <textarea class="form-input" id="aiLightboxPrompt" rows="3" style="resize:vertical;" placeholder="e.g., Assemble a high-resolution media package for the 2026 Spring Industrial Fasteners campaign in Germany."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModalDirect('aiLightboxModal')">Cancel</button>
+      <button class="btn btn-primary" style="background:var(--purple); border-color:var(--purple);" onclick="executeGenerateAiLightbox()"><span class="icon">✨</span> Generate Collection</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- AI STATUS INFO MODAL -->
+<div class="modal-overlay" id="aiStatusModal" onclick="closeModalOnOverlay(event, 'aiStatusModal')">
+  <div class="modal-card" style="max-width: 520px;">
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--purple); font-weight:800;">
+        <span class="icon">✨</span> Gemini API Connection Status
+      </div>
+      <button class="modal-close" onclick="closeModalDirect('aiStatusModal')"><span class="icon"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span></button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--card); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+          <span style="font-weight:700;">Provider</span>
+          <span style="color:var(--purple); font-weight:700;" id="aiStatusProvider">Google Gemini API</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+          <span style="font-weight:700;">Active Model</span>
+          <span style="font-family:var(--font-mono);" id="aiStatusModel">gemma-4-31b</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+          <span style="font-weight:700;">API Key Configured</span>
+          <span id="aiStatusConfigured" class="pill pill-green">Active</span>
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-3); margin-top:0.75rem; line-height:1.5;" id="aiStatusMsg">
+          ...
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModalDirect('aiStatusModal')">Close</button>
+    </div>
+  </div>
+</div>
+
 
 
 <!-- EXPORT DRAWER -->
@@ -2014,12 +2108,16 @@ function executeUpload() {
 function quickPreview(e, assetId) {
   if (e) e.stopPropagation();
   const asset = CATALOG_ASSETS.find(a => a.id === assetId) || CATALOG_ASSETS[0];
+  currentPreviewAssetId = asset.id;
 
   document.getElementById('previewTitle').textContent = asset.name;
   document.getElementById('previewSku').textContent = asset.sku;
   document.getElementById('previewType').textContent = asset.type.key;
   document.getElementById('previewDims').textContent = `${asset.w} × ${asset.h}`;
   document.getElementById('previewSize').textContent = asset.size;
+
+  const enrichPanel = document.getElementById('aiEnrichPanel');
+  if (enrichPanel) enrichPanel.style.display = 'none';
 
   const container = document.getElementById('previewContainer');
   container.innerHTML = '';
@@ -2038,6 +2136,209 @@ function quickPreview(e, assetId) {
 
   document.getElementById('previewModal').classList.add('open');
 }
+
+// --- GEMINI API INTEGRATION FRONTEND CONTROLLERS ---
+
+let isSmartSearchActive = false;
+let currentPreviewAssetId = null;
+
+async function checkAiStatus() {
+  try {
+    const res = await fetch('/api/ai/status');
+    if (res.ok) {
+      const data = await res.json();
+      const label = document.getElementById('aiStatusLabel');
+      const badge = document.getElementById('aiStatusBadge');
+      if (data.configured) {
+        label.textContent = 'Gemma 4 31B (Active)';
+        badge.style.borderColor = 'var(--accent)';
+        badge.style.color = 'var(--accent)';
+      } else {
+        label.textContent = 'Gemma 4 31B (Fallback)';
+        badge.style.borderColor = 'var(--amber)';
+        badge.style.color = 'var(--amber)';
+      }
+    }
+  } catch (err) {
+    console.warn('AI status check unavailable:', err);
+  }
+}
+
+async function showAiStatusInfo() {
+  try {
+    const res = await fetch('/api/ai/status');
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById('aiStatusProvider').textContent = data.provider || 'Google Gemini API';
+      document.getElementById('aiStatusModel').textContent = data.model || 'gemma-4-31b';
+      document.getElementById('aiStatusConfigured').textContent = data.configured ? 'Configured (Active)' : 'Unconfigured (Fallback)';
+      document.getElementById('aiStatusConfigured').className = data.configured ? 'pill pill-green' : 'pill pill-gray';
+      document.getElementById('aiStatusMsg').textContent = data.message;
+      document.getElementById('aiStatusModal').classList.add('open');
+    }
+  } catch (err) {
+    showToast('warning', 'AI Service Unavailable', 'Could not query backend AI status');
+  }
+}
+
+function toggleSmartSearchMode() {
+  isSmartSearchActive = !isSmartSearchActive;
+  const btnText = document.getElementById('smartSearchBtnText');
+  const btn = document.getElementById('smartSearchToggleBtn');
+  if (isSmartSearchActive) {
+    btnText.textContent = 'Smart AI Search: ON';
+    btn.style.background = 'var(--purple)';
+    btn.style.color = '#fff';
+    showToast('info', 'Smart Search Activated', 'Type natural language query and press Enter');
+  } else {
+    btnText.textContent = 'Smart AI Search: OFF';
+    btn.style.background = 'transparent';
+    btn.style.color = 'var(--purple)';
+    document.getElementById('aiSearchBanner').style.display = 'none';
+  }
+}
+
+async function executeCatalogSearch() {
+  const promptVal = document.getElementById('catalogSearch').value.trim();
+  if (!promptVal) return;
+
+  if (!isSmartSearchActive) {
+    handleCatalogSearch(promptVal);
+    return;
+  }
+
+  showToast('info', 'Executing AI Search', `Translating prompt via Gemma 4 31B...`);
+
+  try {
+    const currentTenant = document.getElementById('activeTenantCode').textContent || 'DE';
+    const res = await fetch(`/api/ai/smart-search?prompt=${encodeURIComponent(promptVal)}`, {
+      headers: { 'X-Tenant-Region': currentTenant }
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const translation = data.aiTranslation || {};
+      document.getElementById('aiTranslationExplanation').textContent = translation.explanation || 'Query processed';
+      document.getElementById('aiTranslationParams').textContent =
+        `Solr Query: q=${translation.queryTerm || '*:*'} | fileType=${translation.fileType || 'NONE'} | tag=${translation.tag || 'NONE'}`;
+      document.getElementById('aiSearchBanner').style.display = 'block';
+
+      if (data.searchResults && data.searchResults.hits) {
+        showToast('success', 'Smart Search Completed', `Found ${data.searchResults.total || 0} matching items`);
+      }
+    }
+  } catch (err) {
+    console.error('Smart search failed:', err);
+    showToast('warning', 'Smart Search Failed', 'Falling back to standard keyword search');
+    handleCatalogSearch(promptVal);
+  }
+}
+
+async function enrichCurrentPreviewAsset() {
+  if (!currentPreviewAssetId) return;
+
+  const btn = document.getElementById('btnEnrichAi');
+  btn.disabled = true;
+  btn.textContent = 'Enriching...';
+
+  const asset = CATALOG_ASSETS.find(a => a.id === currentPreviewAssetId);
+  const currentTenant = document.getElementById('activeTenantCode').textContent || 'DE';
+
+  const payload = {
+    id: asset ? asset.id : currentPreviewAssetId,
+    sku: asset ? asset.sku : 'SKU-MP-8821',
+    fileName: asset ? asset.name : 'Hex Head Cap Screw.png',
+    fileType: (asset && asset.type && asset.type.key) ? asset.type.key : 'IMAGE_PNG',
+    sizeInBytes: 12400000,
+    width: asset ? (asset.w || 3840) : 3840,
+    height: asset ? (asset.h || 2160) : 2160,
+    tags: asset && asset.tag ? [asset.tag] : ['fastener']
+  };
+
+  try {
+    const res = await fetch('/api/ai/enrich-asset', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Tenant-Region': currentTenant
+      },
+      body: JSON.stringify(payload)
+    });
+
+
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById('aiEnrichDesc').textContent = data.localizedDescription || 'Standard enriched description';
+      document.getElementById('aiEnrichAlt').textContent = `Alt text: "${data.altText || 'Product image'}"`;
+
+      const tagsContainer = document.getElementById('aiEnrichTags');
+      tagsContainer.innerHTML = '';
+      (data.tags || []).forEach(t => {
+        const span = document.createElement('span');
+        span.className = 'pill pill-gray';
+        span.style.fontSize = '0.68rem';
+        span.textContent = `#${t}`;
+        tagsContainer.appendChild(span);
+      });
+
+      document.getElementById('aiEnrichModeBadge').textContent = data.aiPowered ? '✨ Gemma 4 31B' : 'Fallback Mode';
+      document.getElementById('aiEnrichPanel').style.display = 'block';
+      showToast('success', 'Asset Enriched', 'Multi-lingual tags & metadata generated');
+    }
+  } catch (err) {
+    showToast('warning', 'Enrichment Failed', 'Could not enrich metadata');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span class="icon">✨</span> Enrich with Gemma AI';
+  }
+}
+
+function openAiLightboxModal() {
+  document.getElementById('aiLightboxPrompt').value = '';
+  document.getElementById('aiLightboxModal').classList.add('open');
+}
+
+async function executeGenerateAiLightbox() {
+  const promptText = document.getElementById('aiLightboxPrompt').value.trim();
+  if (!promptText) {
+    showToast('warning', 'Input Required', 'Please enter a campaign brief');
+    return;
+  }
+
+  closeModalDirect('aiLightboxModal');
+  showToast('info', 'Generating AI Lightbox', 'Selecting matching catalog assets via Gemma 4 31B...');
+
+  const currentTenant = document.getElementById('activeTenantCode').textContent || 'DE';
+
+  try {
+    const res = await fetch(`/api/ai/generate-lightbox?prompt=${encodeURIComponent(promptText)}&ownerUserId=NupoorD`, {
+      method: 'POST',
+      headers: { 'X-Tenant-Region': currentTenant }
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const created = data.createdLightbox || {};
+      const newLb = {
+        id: created.id || `lb-ai-${Date.now()}`,
+        title: created.title || 'AI Curated Collection',
+        code: `LB-2026-${currentTenant}-AI`,
+        region: currentTenant,
+        version: created.version || 1,
+        assets: CATALOG_ASSETS.slice(0, 3)
+      };
+
+      ALL_LIGHTBOXES.push(newLb);
+      saveLightboxesToStorage();
+      switchActiveLightbox(newLb.id);
+      showToast('success', 'AI Lightbox Created', `Generated collection '${newLb.title}'`);
+    }
+  } catch (err) {
+    showToast('warning', 'AI Lightbox Failed', 'Creating fallback collection');
+    executeCreateLightbox();
+  }
+}
+
 
 function closePreviewModal(e) {
   if (e.target === document.getElementById('previewModal')) closeModalDirect('previewModal');
@@ -2153,6 +2454,8 @@ initTheme();
 loadLightboxesFromStorage();
 renderCatalog();
 switchActiveLightbox(activeLightboxId);
+checkAiStatus();
 </script>
+
 </body>
 </html>

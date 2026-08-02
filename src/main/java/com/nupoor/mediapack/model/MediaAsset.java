@@ -8,8 +8,12 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Document(collection = "media_assets")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MediaAsset {
+
 
     @Id
     private String id;

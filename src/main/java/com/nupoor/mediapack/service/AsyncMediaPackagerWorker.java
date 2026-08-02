@@ -36,15 +36,19 @@ public class AsyncMediaPackagerWorker {
     private final SimpMessagingTemplate messagingTemplate;
     private final S3StorageService s3Service;
     private final RedisTaskPublisher redisTaskPublisher;
+    private final GeminiAiService geminiAiService;
 
     public AsyncMediaPackagerWorker(
             SimpMessagingTemplate messagingTemplate,
             S3StorageService s3Service,
-            RedisTaskPublisher redisTaskPublisher) {
+            RedisTaskPublisher redisTaskPublisher,
+            GeminiAiService geminiAiService) {
         this.messagingTemplate = messagingTemplate;
         this.s3Service = s3Service;
         this.redisTaskPublisher = redisTaskPublisher;
+        this.geminiAiService = geminiAiService;
     }
+
 
     @Async("exportTaskExecutor")
     public void processExportJob(String jobId, List<String> assetKeys) {
@@ -91,7 +95,21 @@ public class AsyncMediaPackagerWorker {
                 Thread.sleep(150);
             }
 
+            // Generate AI Package Manifest and add to ZIP
+            try {
+                String currentTenant = com.nupoor.mediapack.config.tenant.TenantContext.getCurrentTenant();
+                String manifestContent = geminiAiService.generateExportManifest(assetKeys, currentTenant);
+                ZipEntry manifestEntry = new ZipEntry("MANIFEST.md");
+                zos.putNextEntry(manifestEntry);
+                zos.write(manifestContent.getBytes(StandardCharsets.UTF_8));
+                zos.closeEntry();
+                log.info("[Export {}] Included AI generated MANIFEST.md in ZIP bundle", jobId);
+            } catch (Exception ex) {
+                log.warn("[Export {}] Could not generate AI manifest: {}", jobId, ex.getMessage());
+            }
+
             zos.finish();
+
             byte[] zipBytes = baos.toByteArray();
 
             // Upload ZIP to S3 / LocalStack
@@ -131,13 +149,30 @@ public class AsyncMediaPackagerWorker {
     }
 
     /**
-     * Progress event record published over STOMP WebSockets to connected clients.
+     * Progress event class published over STOMP WebSockets to connected clients.
      */
-    public record ExportProgressEvent(
-        String jobId,
-        int progressPercent,
-        String status,
-        String downloadUrl,
-        String message
-    ) {}
+    public static class ExportProgressEvent {
+        private String jobId;
+        private int progressPercent;
+        private String status;
+        private String downloadUrl;
+        private String message;
+
+        public ExportProgressEvent() {}
+
+        public ExportProgressEvent(String jobId, int progressPercent, String status, String downloadUrl, String message) {
+            this.jobId = jobId;
+            this.progressPercent = progressPercent;
+            this.status = status;
+            this.downloadUrl = downloadUrl;
+            this.message = message;
+        }
+
+        public String getJobId() { return jobId; }
+        public int getProgressPercent() { return progressPercent; }
+        public String getStatus() { return status; }
+        public String getDownloadUrl() { return downloadUrl; }
+        public String getMessage() { return message; }
+    }
+
 }
