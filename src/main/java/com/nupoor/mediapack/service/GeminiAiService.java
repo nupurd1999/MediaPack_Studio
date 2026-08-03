@@ -246,13 +246,24 @@ public class GeminiAiService {
         );
 
         try {
-            String manifest = callGeminiApi(prompt, false);
-            return manifest.trim();
+            java.util.concurrent.CompletableFuture<String> future = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                try {
+                    return callGeminiApi(prompt, false);
+                } catch (Exception e) {
+                    return null;
+                }
+            });
+            String manifest = future.get(1800, java.util.concurrent.TimeUnit.MILLISECONDS);
+            if (manifest != null && !manifest.isBlank()) {
+                return manifest.trim();
+            }
         } catch (Exception e) {
-            log.warn("Gemini API call failed for export manifest generation: {}. Falling back.", e.getMessage());
-            return fallbackGenerateManifest(assetKeys, effectiveRegion);
+            log.warn("Gemini API call timed out/failed for export manifest: {}. Using structured fallback.", e.getMessage());
         }
+
+        return fallbackGenerateManifest(assetKeys, effectiveRegion);
     }
+
 
     // --- GEMINI REST API CLIENT METHOD ---
 

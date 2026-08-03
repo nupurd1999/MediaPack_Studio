@@ -32,8 +32,14 @@ import java.util.zip.ZipOutputStream;
 public class AsyncMediaPackagerWorker {
 
     private static final Logger log = LoggerFactory.getLogger(AsyncMediaPackagerWorker.class);
+    private static final java.util.Map<String, byte[]> ZIP_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public static byte[] getZipBytes(String jobId) {
+        return ZIP_CACHE.get(jobId);
+    }
 
     private final SimpMessagingTemplate messagingTemplate;
+
     private final S3StorageService s3Service;
     private final RedisTaskPublisher redisTaskPublisher;
     private final GeminiAiService geminiAiService;
@@ -52,8 +58,15 @@ public class AsyncMediaPackagerWorker {
 
     @Async("exportTaskExecutor")
     public void processExportJob(String jobId, List<String> assetKeys) {
-        log.info("[Export {}] Starting async ZIP packaging — {} assets on thread {}",
-                jobId, assetKeys != null ? assetKeys.size() : 0, Thread.currentThread().getName());
+        processExportJob(jobId, assetKeys, "DE");
+    }
+
+    @Async("exportTaskExecutor")
+    public void processExportJob(String jobId, List<String> assetKeys, String tenantRegion) {
+
+        String effectiveRegion = (tenantRegion != null && !tenantRegion.isBlank()) ? tenantRegion : "DE";
+        log.info("[Export {}] Starting async ZIP packaging — {} assets (tenant={}) on thread {}",
+                jobId, assetKeys != null ? assetKeys.size() : 0, effectiveRegion, Thread.currentThread().getName());
 
         if (assetKeys == null || assetKeys.isEmpty()) {
             String errMsg = "No asset keys provided for export.";
@@ -77,8 +90,8 @@ public class AsyncMediaPackagerWorker {
                 ZipEntry entry = new ZipEntry("assets/" + assetKey + ".dat");
                 zos.putNextEntry(entry);
                 String assetContent = String.format(
-                    "=== Würth Industrial Media Asset ===\nKey: %s\nExported at: %s\nJob: %s",
-                    assetKey, Instant.now(), jobId);
+                    "=== Würth Industrial Media Asset ===\nKey: %s\nTenant Region: %s\nExported at: %s\nJob: %s",
+                    assetKey, effectiveRegion, Instant.now(), jobId);
                 zos.write(assetContent.getBytes(StandardCharsets.UTF_8));
                 zos.closeEntry();
 
@@ -97,11 +110,11 @@ public class AsyncMediaPackagerWorker {
 
             // Generate AI Package Manifest and add to ZIP
             try {
-                String currentTenant = com.nupoor.mediapack.config.tenant.TenantContext.getCurrentTenant();
-                String manifestContent = geminiAiService.generateExportManifest(assetKeys, currentTenant);
+                String manifestContent = geminiAiService.generateExportManifest(assetKeys, effectiveRegion);
                 ZipEntry manifestEntry = new ZipEntry("MANIFEST.md");
                 zos.putNextEntry(manifestEntry);
                 zos.write(manifestContent.getBytes(StandardCharsets.UTF_8));
+
                 zos.closeEntry();
                 log.info("[Export {}] Included AI generated MANIFEST.md in ZIP bundle", jobId);
             } catch (Exception ex) {
@@ -111,14 +124,20 @@ public class AsyncMediaPackagerWorker {
             zos.finish();
 
             byte[] zipBytes = baos.toByteArray();
+            ZIP_CACHE.put(jobId, zipBytes);
 
-            // Upload ZIP to S3 / LocalStack
-            String s3Key = "exports/" + jobId + ".zip";
-            s3Service.uploadFile(s3Key, new ByteArrayInputStream(zipBytes), zipBytes.length, "application/zip");
-            String presignedUrl = s3Service.generatePresignedUrl(s3Key);
+            String presignedUrl = "/api/exports/download/" + jobId;
+            try {
+                String s3Key = "exports/" + jobId + ".zip";
+                s3Service.uploadFile(s3Key, new ByteArrayInputStream(zipBytes), zipBytes.length, "application/zip");
+                presignedUrl = s3Service.generatePresignedUrl(s3Key);
+            } catch (Exception s3Ex) {
+                log.warn("[Export {}] LocalStack S3 offline, using local download URL: {}", jobId, s3Ex.getMessage());
+            }
 
             // Persist final COMPLETED state in Redis
             redisTaskPublisher.updateJobState(jobId, "COMPLETED", 100, presignedUrl, null);
+
 
             log.info("[Export {}] Completed — ZIP size: {} bytes — Pre-signed URL generated", jobId, zipBytes.length);
 

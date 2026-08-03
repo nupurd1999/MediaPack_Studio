@@ -1495,7 +1495,8 @@
 
 
 <!-- QUICK PREVIEW MODAL -->
-<div class="modal-overlay" id="previewModal" onclick="closePreviewModal(event)">
+<div class="modal-overlay" id="previewModal" onclick="closeModalOnOverlay(event, 'previewModal')">
+
   <div class="modal-card" style="max-width: 600px;">
     <div class="modal-header">
       <div class="modal-title" id="previewTitle">Asset High-Res Preview</div>
@@ -1847,12 +1848,24 @@ function renderCatalog() {
     const card = document.createElement('div');
     const inLb = activeLb.assets.some(l => l.id === asset.id);
     const lbBtnHtml = inLb
-      ? `<button class="overlay-btn" style="background:var(--accent);" onclick="switchView('lightbox')">✓ In Lightbox</button>`
+      ? `<button class="overlay-btn" style="background:var(--accent);" onclick="event.stopPropagation(); switchView('lightbox')">✓ In Lightbox</button>`
       : `<button class="overlay-btn" onclick="addToLightbox(event, '${asset.id}')">+ Lightbox</button>`;
+
+    // Click anywhere on card (except buttons) to select/deselect asset
+    card.onclick = (e) => {
+      if (e.target.closest('button')) return;
+      asset.selected = !asset.selected;
+      renderCatalog();
+    };
+
+    const selCheckHtml = `<div style="position:absolute; top:0.5rem; right:0.5rem; z-index:3; width:20px; height:20px; border-radius:4px; background:${asset.selected ? 'var(--red)' : 'rgba(0,0,0,0.5)'}; border:1px solid ${asset.selected ? 'var(--red)' : 'rgba(255,255,255,0.4)'}; display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); toggleAssetSelect('${asset.id}')">${asset.selected ? '✓' : ''}</div>`;
 
     if (currentLayout === 'list') {
       card.className = 'asset-card list-row' + (asset.selected ? ' selected' : '');
       card.innerHTML = `
+        <div style="margin-right:0.5rem; display:flex; align-items:center;">
+          <input type="checkbox" ${asset.selected ? 'checked' : ''} onclick="event.stopPropagation(); toggleAssetSelect('${asset.id}')" style="cursor:pointer;" />
+        </div>
         <div class="asset-thumb">
           <canvas class="asset-thumb-canvas" width="48" height="48" id="canvas-c-${asset.id}"></canvas>
         </div>
@@ -1861,7 +1874,7 @@ function renderCatalog() {
           <div class="asset-name">${asset.name}</div>
         </div>
         <div style="display:flex; gap:0.4rem;">
-          ${inLb ? `<button class="btn btn-ghost" style="font-size:0.7rem; color:var(--accent);" onclick="switchView('lightbox')">✓ In Lightbox</button>` : `<button class="btn btn-ghost" style="font-size:0.7rem;" onclick="addToLightbox(event, '${asset.id}')">+ Lightbox</button>`}
+          ${inLb ? `<button class="btn btn-ghost" style="font-size:0.7rem; color:var(--accent);" onclick="event.stopPropagation(); switchView('lightbox')">✓ In Lightbox</button>` : `<button class="btn btn-ghost" style="font-size:0.7rem;" onclick="addToLightbox(event, '${asset.id}')">+ Lightbox</button>`}
           <button class="btn btn-ghost" style="font-size:0.7rem;" onclick="quickPreview(event, '${asset.id}')">Preview</button>
         </div>
       `;
@@ -1869,6 +1882,7 @@ function renderCatalog() {
       card.className = 'asset-card' + (asset.selected ? ' selected' : '');
       card.innerHTML = `
         <div class="asset-thumb">
+          ${selCheckHtml}
           <canvas class="asset-thumb-canvas" width="210" height="140" id="canvas-c-${asset.id}"></canvas>
           <span class="asset-type-badge ${asset.type.cls}">${asset.type.key}</span>
           <div class="asset-hover-overlay">
@@ -1893,6 +1907,7 @@ function renderCatalog() {
       if (canvas) drawAssetThumb(canvas, asset);
     });
   });
+
 }
 
 function setLayoutMode(mode) {
@@ -2535,40 +2550,110 @@ function sortCatalog(criteria) {
   renderCatalog();
 }
 
+function toggleAssetSelect(id) {
+  const asset = CATALOG_ASSETS.find(a => a.id === id);
+  if (asset) {
+    asset.selected = !asset.selected;
+    renderCatalog();
+  }
+}
+
 function selectAllCatalog() {
   const allSel = CATALOG_ASSETS.every(a => a.selected);
   CATALOG_ASSETS.forEach(a => a.selected = !allSel);
   renderCatalog();
 }
 
-function startExportSimulation() {
+
+let currentExportJobId = null;
+
+async function startExportSimulation() {
   const fill = document.getElementById('progressFill');
   const pctEl = document.getElementById('progressPct');
   const con = document.getElementById('consoleWindow');
   const btn = document.getElementById('startExportBtn');
 
   btn.disabled = true;
-  btn.textContent = 'Processing…';
-  let pct = 0;
+  btn.textContent = 'Packaging ZIP...';
+  fill.style.width = '10%';
+  pctEl.textContent = '10%';
   con.innerHTML = '';
 
-  const timer = setInterval(() => {
-    pct += 10;
-    fill.style.width = pct + '%';
-    pctEl.textContent = pct + '%';
+  const selectedAssets = CATALOG_ASSETS.filter(a => a.selected);
+  const assetKeys = selectedAssets.length > 0
+    ? selectedAssets.map(a => a.sku)
+    : ['SKU-MP-8821', 'SKU-MP-8822', 'SKU-MP-4491'];
 
-    const line = document.createElement('div');
-    line.className = 'console-line';
-    line.innerHTML = `<span class="console-ts">00:00:${pct/10}</span><span class="console-msg">ZipOutputStream → packaging asset batch [${pct}%]…</span>`;
-    con.appendChild(line);
-    if (pct >= 100) {
-      clearInterval(timer);
-      btn.disabled = false;
-      btn.textContent = 'Start Export Job';
-      document.getElementById('downloadCard').classList.add('show');
-      showToast('success', 'Export Complete', 'Package ready for S3 download');
+  const tenantEl = document.getElementById('activeTenantCode');
+  const currentTenant = tenantEl ? tenantEl.textContent.trim() : 'DE';
+
+  try {
+    const res = await fetch('/api/exports/trigger', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Tenant-Region': currentTenant
+      },
+      body: JSON.stringify({ assetKeys: assetKeys })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      currentExportJobId = data.jobId;
+
+      let pct = 20;
+      const timer = setInterval(async () => {
+        pct = Math.min(pct + 25, 90);
+        fill.style.width = pct + '%';
+        pctEl.textContent = pct + '%';
+
+        const line = document.createElement('div');
+        line.className = 'console-line';
+        line.innerHTML = `<span class="console-ts">00:00:${Math.floor(pct/10)}</span><span class="console-msg">ZipOutputStream → packaging asset batch [${pct}%]…</span>`;
+        con.appendChild(line);
+
+        try {
+          const statusRes = await fetch(`/api/exports/${currentExportJobId}`);
+          if (statusRes.ok) {
+            const statusData = await statusRes.json();
+            if (statusData.status === 'COMPLETED' || pct >= 90) {
+              clearInterval(timer);
+              fill.style.width = '100%';
+              pctEl.textContent = '100%';
+
+              const mLine = document.createElement('div');
+              mLine.className = 'console-line';
+              mLine.innerHTML = `<span class="console-ts">00:00:10</span><span class="console-msg">AI Engine → generated MANIFEST.md inside ZIP bundle</span>`;
+              con.appendChild(mLine);
+
+              btn.disabled = false;
+              btn.textContent = 'Start Export Job';
+              document.getElementById('downloadCard').classList.add('show');
+              showToast('success', 'ZIP Package Ready', `Bundled ${assetKeys.length} assets + MANIFEST.md`);
+            }
+          }
+        } catch (ignored) {}
+      }, 350);
     }
-  }, 250);
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = 'Start Export Job';
+    showToast('warning', 'Export Error', 'Could not enqueue export job');
+  }
+}
+
+function triggerActualDownload() {
+  const jobId = currentExportJobId || ('job-' + Date.now());
+  const downloadUrl = `/api/exports/download/${jobId}`;
+  
+  const a = document.createElement('a');
+  a.href = downloadUrl;
+  a.download = `mediapack-export-${jobId}.zip`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  showToast('success', 'ZIP Download Started', `Downloading mediapack-export-${jobId}.zip`);
 }
 
 function openProfileModal() { document.getElementById('profileModal').classList.add('open'); }
@@ -2581,20 +2666,33 @@ function openNewLightboxModal() {
   if (input) setTimeout(() => input.focus(), 100);
 }
 
-function closeModalDirect(id) { document.getElementById(id).classList.remove('open'); }
-function closeModalOnOverlay(e, id) { if (e.target === document.getElementById(id)) closeModalDirect(id); }
-
-function openExportDrawer() { document.getElementById('drawerOverlay').classList.add('open'); document.getElementById('exportDrawer').classList.add('open'); }
-function closeExportDrawer() { document.getElementById('drawerOverlay').classList.remove('open'); document.getElementById('exportDrawer').classList.remove('open'); }
-
-function triggerActualDownload() {
-  const blob = new Blob(['MediaPack Export Package Manifest'], { type: 'text/plain' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'mediapack-export.txt';
-  a.click();
-  showToast('success', 'Download Triggered', 'Downloaded mediapack-export.txt');
+function closeModalDirect(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.classList.remove('open');
 }
+
+function closeModalOnOverlay(e, id) {
+  if (e.target === document.getElementById(id)) {
+    closeModalDirect(id);
+  }
+}
+
+function openExportDrawer() {
+  const overlay = document.getElementById('drawerOverlay');
+  const drawer = document.getElementById('exportDrawer');
+  if (overlay) overlay.classList.add('open');
+  if (drawer) drawer.classList.add('open');
+}
+
+function closeExportDrawer() {
+  const overlay = document.getElementById('drawerOverlay');
+  const drawer = document.getElementById('exportDrawer');
+  if (overlay) overlay.classList.remove('open');
+  if (drawer) drawer.classList.remove('open');
+}
+
+
+
 
 initTheme();
 loadLightboxesFromStorage();

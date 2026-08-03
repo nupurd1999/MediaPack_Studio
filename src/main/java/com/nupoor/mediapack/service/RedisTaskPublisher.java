@@ -30,6 +30,7 @@ public class RedisTaskPublisher {
     static final Duration JOB_TTL = Duration.ofHours(24);
 
     private final RedisTemplate<String, Object> redisTemplate;
+    private final Map<String, Map<Object, Object>> inMemoryState = new java.util.concurrent.ConcurrentHashMap<>();
 
     public RedisTaskPublisher(RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;
@@ -41,21 +42,25 @@ public class RedisTaskPublisher {
     public ExportJobState enqueue(ExportJobRequest request, String jobId, String tenantRegion) {
         ExportJobState state = new ExportJobState(jobId, tenantRegion, request.assetKeys());
 
-        String stateKey = JOB_KEY_PREFIX + jobId;
-        redisTemplate.opsForHash().putAll(stateKey, Map.of(
+        Map<Object, Object> stateMap = new java.util.HashMap<>(Map.of(
             "jobId",         state.getJobId(),
             "tenantRegion",  state.getTenantRegion(),
             "status",        state.getStatus(),
             "progress",      String.valueOf(state.getProgressPercent()),
             "submittedAt",   state.getSubmittedAt().toString()
         ));
-        redisTemplate.expire(stateKey, JOB_TTL);
 
-        // Push job ID onto the FIFO queue
-        redisTemplate.opsForList().leftPush(QUEUE_KEY, jobId);
+        inMemoryState.put(jobId, stateMap);
 
-        log.info("Enqueued export job {} (tenant={}) with {} assets to Redis queue",
-                jobId, tenantRegion, request.assetKeys().size());
+        try {
+            String stateKey = JOB_KEY_PREFIX + jobId;
+            redisTemplate.opsForHash().putAll(stateKey, stateMap);
+            redisTemplate.expire(stateKey, JOB_TTL);
+            redisTemplate.opsForList().leftPush(QUEUE_KEY, jobId);
+            log.info("Enqueued export job {} (tenant={}) to Redis", jobId, tenantRegion);
+        } catch (Exception e) {
+            log.warn("Redis unavailable for job {}. Falling back to in-memory state: {}", jobId, e.getMessage());
+        }
 
         return state;
     }
@@ -64,16 +69,20 @@ public class RedisTaskPublisher {
      * Updates the persisted job state hash in Redis with new status/progress.
      */
     public void updateJobState(String jobId, String status, int progress, String downloadUrl, String errorMsg) {
-        String stateKey = JOB_KEY_PREFIX + jobId;
+        Map<Object, Object> stateMap = inMemoryState.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
+        stateMap.put("status", status);
+        stateMap.put("progress", String.valueOf(progress));
+        if (downloadUrl != null) stateMap.put("downloadUrl", downloadUrl);
+        if (errorMsg != null) stateMap.put("errorMessage", errorMsg);
 
-        redisTemplate.opsForHash().put(stateKey, "status", status);
-        redisTemplate.opsForHash().put(stateKey, "progress", String.valueOf(progress));
-
-        if (downloadUrl != null) {
-            redisTemplate.opsForHash().put(stateKey, "downloadUrl", downloadUrl);
-        }
-        if (errorMsg != null) {
-            redisTemplate.opsForHash().put(stateKey, "errorMessage", errorMsg);
+        try {
+            String stateKey = JOB_KEY_PREFIX + jobId;
+            redisTemplate.opsForHash().put(stateKey, "status", status);
+            redisTemplate.opsForHash().put(stateKey, "progress", String.valueOf(progress));
+            if (downloadUrl != null) redisTemplate.opsForHash().put(stateKey, "downloadUrl", downloadUrl);
+            if (errorMsg != null) redisTemplate.opsForHash().put(stateKey, "errorMessage", errorMsg);
+        } catch (Exception e) {
+            log.debug("Redis update ignored for job {}: {}", jobId, e.getMessage());
         }
     }
 
@@ -82,8 +91,16 @@ public class RedisTaskPublisher {
      */
     @SuppressWarnings("unchecked")
     public Optional<Map<Object, Object>> getJobState(String jobId) {
-        String stateKey = JOB_KEY_PREFIX + jobId;
-        Map<Object, Object> entries = redisTemplate.opsForHash().entries(stateKey);
-        return entries.isEmpty() ? Optional.empty() : Optional.of(entries);
+        try {
+            String stateKey = JOB_KEY_PREFIX + jobId;
+            Map<Object, Object> entries = redisTemplate.opsForHash().entries(stateKey);
+            if (!entries.isEmpty()) return Optional.of(entries);
+        } catch (Exception e) {
+            log.debug("Redis read fallback for job {}: {}", jobId, e.getMessage());
+        }
+
+        Map<Object, Object> fallback = inMemoryState.get(jobId);
+        return fallback != null && !fallback.isEmpty() ? Optional.of(fallback) : Optional.empty();
     }
 }
+
