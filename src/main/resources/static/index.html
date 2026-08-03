@@ -1623,26 +1623,41 @@
 
 <div class="export-drawer" id="exportDrawer">
   <div class="drawer-header">
-    <div class="drawer-title">Async Bulk Export</div>
+    <div style="flex:1;">
+      <div class="drawer-title" style="font-size:1.1rem; font-weight:800;">Bulk Export Selected</div>
+      <div style="font-size:0.75rem; color:var(--text-3); margin-top:0.15rem;">Review selected media assets before downloading ZIP</div>
+    </div>
     <button class="drawer-close" onclick="closeExportDrawer()"><span class="icon"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span></button>
   </div>
   <div class="drawer-body">
+    <!-- Clean Files Summary List for Non-Technical Users -->
+    <div style="background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem; padding-bottom:0.5rem; border-bottom:1px solid var(--border);">
+        <span style="font-size:0.75rem; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.04em;" id="exportListHeader">Included Files</span>
+        <span class="pill pill-red" id="exportCountBadge" style="font-size:0.65rem;">0 Files</span>
+      </div>
+      <div id="exportFileList" style="display:flex; flex-direction:column; gap:0.6rem; max-height:260px; overflow-y:auto; padding-right:0.25rem;"></div>
+    </div>
+
+    <!-- Minimal Progress Bar -->
     <div class="progress-section">
       <div class="progress-header">
-        <div class="progress-status" id="progressStatusText">Ready to trigger ZIP export job</div>
-        <div class="progress-pct" id="progressPct">0%</div>
+        <div class="progress-status" id="progressStatusText" style="font-size:0.82rem; font-weight:600; color:var(--text-2);">Ready to create package (.ZIP)</div>
+        <div class="progress-pct" id="progressPct" style="font-size:1.2rem; font-weight:800; color:var(--red);">0%</div>
       </div>
       <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
     </div>
-    <div class="console-window" id="consoleWindow">
-      <div class="console-line"><span class="console-ts">00:00:00</span><span class="console-msg">Export worker initialized</span></div>
-    </div>
+
+    <!-- Export Action Buttons -->
     <div class="download-card" id="downloadCard">
-      <button class="btn-download" id="downloadBtn" onclick="triggerActualDownload()">Download Media Package (.ZIP)</button>
+      <button class="btn-download" id="downloadBtn" onclick="triggerActualDownload()">
+        <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></span> Download Media Package (.ZIP)
+      </button>
     </div>
-    <button class="btn btn-primary" id="startExportBtn" onclick="startExportSimulation()">Start Export Job</button>
+    <button class="btn btn-primary" style="padding:0.85rem; font-size:0.9rem;" id="startExportBtn" onclick="startExportSimulation()">Start Export Job</button>
   </div>
 </div>
+
 
 <div class="toast-container" id="toastContainer"></div>
 
@@ -2567,22 +2582,51 @@ function selectAllCatalog() {
 
 let currentExportJobId = null;
 
+function renderExportFileList() {
+  const container = document.getElementById('exportFileList');
+  const badge = document.getElementById('exportCountBadge');
+  const header = document.getElementById('exportListHeader');
+  if (!container) return;
+
+  const selected = CATALOG_ASSETS.filter(a => a.selected);
+  const itemsToExport = selected.length > 0 ? selected : CATALOG_ASSETS.slice(0, 3);
+
+  if (badge) badge.textContent = `${itemsToExport.length} Files`;
+  if (header) header.textContent = `Included Files (${itemsToExport.length})`;
+
+  container.innerHTML = itemsToExport.map(a => `
+    <div style="background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-md); padding:0.65rem 0.85rem; display:flex; align-items:center; justify-content:space-between; gap:0.75rem;">
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:0.82rem; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${a.name}">${a.name}</div>
+        <div style="display:flex; align-items:center; gap:0.4rem; margin-top:0.2rem; font-size:0.72rem; color:var(--text-3); font-family:var(--font-mono);">
+          <span style="color:var(--red); font-weight:700;">${a.sku}</span>
+          <span>•</span>
+          <span style="color:var(--text-2);">${a.type ? a.type.key : 'IMAGE_PNG'}</span>
+          <span>•</span>
+          <span style="color:var(--text-2);">${a.size || '12.4 MB'}</span>
+        </div>
+      </div>
+      <div style="width:20px; height:20px; border-radius:50%; background:rgba(16,185,129,0.15); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:900; flex-shrink:0;">✓</div>
+    </div>
+  `).join('');
+}
+
 async function startExportSimulation() {
   const fill = document.getElementById('progressFill');
   const pctEl = document.getElementById('progressPct');
-  const con = document.getElementById('consoleWindow');
   const btn = document.getElementById('startExportBtn');
+  const statusTxt = document.getElementById('progressStatusText');
 
   btn.disabled = true;
   btn.textContent = 'Packaging ZIP...';
+  if (statusTxt) statusTxt.textContent = 'Packaging selected media files...';
   fill.style.width = '10%';
   pctEl.textContent = '10%';
-  con.innerHTML = '';
 
   const selectedAssets = CATALOG_ASSETS.filter(a => a.selected);
   const assetKeys = selectedAssets.length > 0
     ? selectedAssets.map(a => a.sku)
-    : ['SKU-MP-8821', 'SKU-MP-8822', 'SKU-MP-4491'];
+    : CATALOG_ASSETS.slice(0, 3).map(a => a.sku);
 
   const tenantEl = document.getElementById('activeTenantCode');
   const currentTenant = tenantEl ? tenantEl.textContent.trim() : 'DE';
@@ -2606,11 +2650,7 @@ async function startExportSimulation() {
         pct = Math.min(pct + 25, 90);
         fill.style.width = pct + '%';
         pctEl.textContent = pct + '%';
-
-        const line = document.createElement('div');
-        line.className = 'console-line';
-        line.innerHTML = `<span class="console-ts">00:00:${Math.floor(pct/10)}</span><span class="console-msg">ZipOutputStream → packaging asset batch [${pct}%]…</span>`;
-        con.appendChild(line);
+        if (statusTxt) statusTxt.textContent = `Packaging selected media files... (${pct}%)`;
 
         try {
           const statusRes = await fetch(`/api/exports/${currentExportJobId}`);
@@ -2620,14 +2660,9 @@ async function startExportSimulation() {
               clearInterval(timer);
               fill.style.width = '100%';
               pctEl.textContent = '100%';
+              if (statusTxt) statusTxt.textContent = 'ZIP package ready for download!';
 
-              const mLine = document.createElement('div');
-              mLine.className = 'console-line';
-              mLine.innerHTML = `<span class="console-ts">00:00:10</span><span class="console-msg">AI Engine → generated MANIFEST.md inside ZIP bundle</span>`;
-              con.appendChild(mLine);
-
-              btn.disabled = false;
-              btn.textContent = 'Start Export Job';
+              btn.style.display = 'none';
               document.getElementById('downloadCard').classList.add('show');
               showToast('success', 'ZIP Package Ready', `Bundled ${assetKeys.length} assets + MANIFEST.md`);
             }
@@ -2638,6 +2673,7 @@ async function startExportSimulation() {
   } catch (err) {
     btn.disabled = false;
     btn.textContent = 'Start Export Job';
+    if (statusTxt) statusTxt.textContent = 'Ready to create package (.ZIP)';
     showToast('warning', 'Export Error', 'Could not enqueue export job');
   }
 }
@@ -2682,6 +2718,21 @@ function openExportDrawer() {
   const drawer = document.getElementById('exportDrawer');
   if (overlay) overlay.classList.add('open');
   if (drawer) drawer.classList.add('open');
+
+  // Reset export drawer state
+  const btn = document.getElementById('startExportBtn');
+  const dlCard = document.getElementById('downloadCard');
+  const fill = document.getElementById('progressFill');
+  const pctEl = document.getElementById('progressPct');
+  const statusTxt = document.getElementById('progressStatusText');
+
+  if (btn) { btn.style.display = 'block'; btn.disabled = false; btn.textContent = 'Start Export Job'; }
+  if (dlCard) dlCard.classList.remove('show');
+  if (fill) fill.style.width = '0%';
+  if (pctEl) pctEl.textContent = '0%';
+  if (statusTxt) statusTxt.textContent = 'Ready to create package (.ZIP)';
+
+  renderExportFileList();
 }
 
 function closeExportDrawer() {
@@ -2690,6 +2741,7 @@ function closeExportDrawer() {
   if (overlay) overlay.classList.remove('open');
   if (drawer) drawer.classList.remove('open');
 }
+
 
 
 
