@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/-%F0%9F%93%A6%20MediaPack%20Studio-1a1a2e?style=for-the-badge&labelColor=0f3460" alt="MediaPack Studio" />
+<img src="./assets/logo.png" alt="MediaPack Studio Logo" width="200" style="border-radius: 16px; margin-bottom: 14px;" />
 
 # MediaPack Studio
 
@@ -37,13 +37,15 @@ It tackles six deeply technical backend problems simultaneously:
 | # | Problem Solved | Technology Used |
 |---|----------------|-----------------|
 | 1 | Multi-region tenant database isolation per HTTP request | Custom `AbstractMongoFactory` + `ThreadLocal` |
-| 2 | Non-blocking ZIP export of multi-GB media bundles | Redis Queue + `@Async` + `ZipOutputStream` streaming |
+| 2 | Non-blocking ZIP export of multi-GB media bundles | Pluggable `StorageService` (Local Disk / S3) + `ZipOutputStream` |
 | 3 | Concurrent lightbox edit safety across distributed users | MongoDB `@Version` Optimistic Locking |
 | 4 | Real-time download progress visibility | Spring WebSockets (STOMP) |
 | 5 | AI-powered asset enrichment & natural language search | Google Gemini API (`gemma-4-31b-it`) |
-| 6 | Secure cloud media delivery | AWS S3 Pre-Signed URLs (24h TTL) |
+| 6 | Binary Ingestion Pipeline & Deduplication | Multipart upload with SHA-256 content deduplication |
+| 7 | Enterprise Compliance & Traceability | GDPR Art. 30 Immutable Audit Trail (`/api/audit-logs`) |
+| 8 | Observability & API Contracts | Spring Boot Actuator (`/actuator/health`) & OpenAPI 3.0 (`/swagger-ui.html`) |
 
-> **Stack:** Java 21 · Spring Boot 3.2 · Google Gemini API (Gemma 4 31B) · MongoDB 6 · Redis 7 · Apache Solr 9.2 · AWS SDK v2 · LocalStack · Docker Compose
+> **Stack:** Java 21 · Spring Boot 3.2.5 · Google Gemini API (Gemma 4 31B) · MongoDB 6 · Redis 7 · Apache Solr 9.5 · Springdoc OpenAPI 3 · Pluggable Local Storage / AWS S3 · Docker Compose
 
 ---
 

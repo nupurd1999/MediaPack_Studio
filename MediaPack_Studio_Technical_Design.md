@@ -1,4 +1,8 @@
-# 📦 MediaPack Studio — Technical Architecture & Implementation Design
+<div align="center">
+  <img src="./assets/logo.png" alt="MediaPack Studio Logo" width="160" style="border-radius: 12px; margin-bottom: 8px;" />
+</div>
+
+# MediaPack Studio — Technical Architecture & Implementation Design
 
 > **Project Concept:** Distributed Bulk Asset Packaging & Multi-Tenant Media Engine  
 > **Domain:** Enterprise E-Commerce & Industrial Logistics  

@@ -5,10 +5,11 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MediaAssetRepository extends MongoRepository<MediaAsset, String> {
     List<MediaAsset> findBySku(String sku);
-    List<MediaAsset> findByFileType(String fileType);
-    List<MediaAsset> findByTagsContaining(String tag);
+    Optional<MediaAsset> findByChecksumSha256(String checksumSha256);
+    List<MediaAsset> findByTenantRegion(String tenantRegion);
 }

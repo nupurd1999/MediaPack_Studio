@@ -44,11 +44,25 @@ public class CollaborativeLightbox {
     public String getOwnerUserId() { return ownerUserId; }
     public void setOwnerUserId(String ownerUserId) { this.ownerUserId = ownerUserId; }
 
-    public List<String> getSharedWithUserIds() { return sharedWithUserIds; }
-    public void setSharedWithUserIds(List<String> sharedWithUserIds) { this.sharedWithUserIds = sharedWithUserIds; }
+    public List<String> getSharedWithUserIds() {
+        if (sharedWithUserIds == null) {
+            sharedWithUserIds = new ArrayList<>();
+        }
+        return sharedWithUserIds;
+    }
+    public void setSharedWithUserIds(List<String> sharedWithUserIds) {
+        this.sharedWithUserIds = sharedWithUserIds != null ? sharedWithUserIds : new ArrayList<>();
+    }
 
-    public List<String> getAssetIds() { return assetIds; }
-    public void setAssetIds(List<String> assetIds) { this.assetIds = assetIds; }
+    public List<String> getAssetIds() {
+        if (assetIds == null) {
+            assetIds = new ArrayList<>();
+        }
+        return assetIds;
+    }
+    public void setAssetIds(List<String> assetIds) {
+        this.assetIds = assetIds != null ? assetIds : new ArrayList<>();
+    }
 
     public Long getVersion() { return version; }
     public void setVersion(Long version) { this.version = version; }

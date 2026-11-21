@@ -12,17 +12,24 @@ spring:
   data:
     mongodb:
       uri: mongodb://admin:secret@localhost:27017/media_catalog_de?authSource=admin&serverSelectionTimeoutMS=1000&connectTimeoutMS=1000
-
-
-
     redis:
       host: localhost
       port: 6379
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+storage:
+  type: local
+  local:
+    base-dir: ./storage
 
 aws:
   s3:
     endpoint: http://localhost:4566
     region: us-east-1
+    bucket: mediapack-assets
 
 solr:
   url: http://localhost:8983/solr/product_media
@@ -32,4 +39,11 @@ gemini:
     key: ${GEMINI_API_KEY:}
     model: ${GEMINI_MODEL:gemma-4-31b-it}
 
-
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

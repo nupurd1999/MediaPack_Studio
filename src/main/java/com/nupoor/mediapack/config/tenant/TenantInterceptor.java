@@ -12,9 +12,15 @@ public class TenantInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        String tenantHeader = request.getHeader(TENANT_HEADER);
-        if (tenantHeader != null && !tenantHeader.isBlank()) {
-            TenantContext.setCurrentTenant(tenantHeader);
+        String tenant = request.getHeader(TENANT_HEADER);
+        if (tenant == null || tenant.isBlank()) {
+            tenant = request.getParameter("tenantRegion");
+        }
+        if (tenant == null || tenant.isBlank()) {
+            tenant = request.getParameter("tenant");
+        }
+        if (tenant != null && !tenant.isBlank()) {
+            TenantContext.setCurrentTenant(tenant.trim());
         } else {
             TenantContext.setCurrentTenant("DE");
         }

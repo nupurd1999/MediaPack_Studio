@@ -54,7 +54,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handles resource-not-found cases from service layers (HTTP 404).
+     * Handles resource-not-found cases (HTTP 404) or invalid arguments (HTTP 400).
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ProblemDetail> handleIllegalArgument(
@@ -62,13 +62,16 @@ public class GlobalExceptionHandler {
 
         log.warn("Resource not found or invalid argument: {}", ex.getMessage());
 
-        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
-        problem.setType(URI.create("https://mediapack.studio/errors/resource-not-found"));
-        problem.setTitle("Resource Not Found");
+        boolean isNotFound = ex.getMessage() != null && ex.getMessage().toLowerCase().contains("not found");
+        HttpStatus status = isNotFound ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+
+        ProblemDetail problem = ProblemDetail.forStatus(status);
+        problem.setType(URI.create("https://mediapack.studio/errors/" + (isNotFound ? "resource-not-found" : "bad-request")));
+        problem.setTitle(isNotFound ? "Resource Not Found" : "Invalid Argument");
         problem.setDetail(ex.getMessage());
         problem.setProperty("timestamp", Instant.now().toString());
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
+        return ResponseEntity.status(status).body(problem);
     }
 
     /**

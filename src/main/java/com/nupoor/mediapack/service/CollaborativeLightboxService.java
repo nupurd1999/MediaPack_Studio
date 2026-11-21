@@ -31,6 +31,9 @@ public class CollaborativeLightboxService {
     }
 
     public CollaborativeLightbox addAssetToLightbox(String lightboxId, String assetId) {
+        if (assetId == null || assetId.isBlank()) {
+            throw new IllegalArgumentException("Asset ID cannot be null or blank");
+        }
         CollaborativeLightbox lightbox = lightboxRepository.findById(lightboxId)
                 .orElseThrow(() -> new IllegalArgumentException("Lightbox not found: " + lightboxId));
 
@@ -44,6 +47,9 @@ public class CollaborativeLightboxService {
     }
 
     public CollaborativeLightbox removeAssetFromLightbox(String lightboxId, String assetId) {
+        if (assetId == null || assetId.isBlank()) {
+            throw new IllegalArgumentException("Asset ID cannot be null or blank");
+        }
         CollaborativeLightbox lightbox = lightboxRepository.findById(lightboxId)
                 .orElseThrow(() -> new IllegalArgumentException("Lightbox not found: " + lightboxId));
 
@@ -53,6 +59,9 @@ public class CollaborativeLightboxService {
     }
 
     public CollaborativeLightbox shareWithUser(String lightboxId, String userId) {
+        if (userId == null || userId.isBlank()) {
+            throw new IllegalArgumentException("User ID cannot be null or blank");
+        }
         CollaborativeLightbox lightbox = lightboxRepository.findById(lightboxId)
                 .orElseThrow(() -> new IllegalArgumentException("Lightbox not found: " + lightboxId));
 

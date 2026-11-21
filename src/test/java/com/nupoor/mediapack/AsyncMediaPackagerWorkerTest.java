@@ -26,6 +26,7 @@ class AsyncMediaPackagerWorkerTest {
         com.nupoor.mediapack.service.GeminiAiService geminiAiService = Mockito.mock(com.nupoor.mediapack.service.GeminiAiService.class);
 
         Mockito.when(s3Service.generatePresignedUrl(any())).thenReturn("http://localhost:4566/bucket/exports/job-1.zip");
+        Mockito.when(geminiAiService.generateExportManifest(any(), any())).thenReturn("# Unit Test Export Manifest\nIncluded Files");
 
         AsyncMediaPackagerWorker worker = new AsyncMediaPackagerWorker(messagingTemplate, s3Service, redisTaskPublisher, geminiAiService);
 

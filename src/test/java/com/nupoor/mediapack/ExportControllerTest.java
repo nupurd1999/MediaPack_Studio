@@ -38,6 +38,9 @@ class ExportControllerTest {
     @MockBean
     private RedisTaskPublisher redisTaskPublisher;
 
+    @MockBean
+    private com.nupoor.mediapack.service.GeminiAiService geminiAiService;
+
     @Test
     @DisplayName("POST /api/exports/trigger — returns 202 Accepted with jobId and progressTopic")
     void testTriggerExport_ReturnsAccepted() throws Exception {
@@ -79,5 +82,18 @@ class ExportControllerTest {
 
         mockMvc.perform(get("/api/exports/unknown-job"))
             .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("GET /api/exports/download/{jobId} — returns ZIP package attachment")
+    void testDownloadExportPackage_ReturnsZip() throws Exception {
+        Mockito.when(geminiAiService.generateExportManifest(anyList(), anyString()))
+                .thenReturn("# Mock Package Manifest");
+
+        mockMvc.perform(get("/api/exports/download/job-test-01")
+                .header("X-Tenant-Region", "DE"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("Content-Disposition", "attachment; filename=\"mediapack-export-job-test-01.zip\""))
+            .andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM));
     }
 }

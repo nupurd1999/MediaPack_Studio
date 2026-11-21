@@ -97,4 +97,41 @@ class MediaAssetControllerTest {
             .andExpect(jsonPath("$.total").value(1))
             .andExpect(jsonPath("$.facets").exists());
     }
+
+    @Test
+    @DisplayName("POST /api/assets/upload — uploads multipart file and returns saved asset")
+    void testUploadAsset_ReturnsCreatedAsset() throws Exception {
+        org.springframework.mock.web.MockMultipartFile mockFile = new org.springframework.mock.web.MockMultipartFile(
+                "file", "screw_drawing.png", "image/png", "sample-image-bytes".getBytes());
+
+        MediaAsset uploaded = new MediaAsset("SKU-SCREW-99", "screw_drawing.png", "assets/de/123/screw_drawing.png",
+                "IMAGE_PNG", 18, 0, 0, List.of("screw"));
+        uploaded.setId("asset-upload-123");
+
+        Mockito.when(assetService.uploadAsset(any(), any(), any(), any(), eq("DE"))).thenReturn(uploaded);
+
+        mockMvc.perform(multipart("/api/assets/upload")
+                .file(mockFile)
+                .param("sku", "SKU-SCREW-99")
+                .header("X-Tenant-Region", "DE"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value("asset-upload-123"))
+            .andExpect(jsonPath("$.sku").value("SKU-SCREW-99"))
+            .andExpect(jsonPath("$.fileName").value("screw_drawing.png"));
+    }
+
+    @Test
+    @DisplayName("GET /api/assets/{id}/download — downloads asset binary stream")
+    void testDownloadAsset_ReturnsBinaryStream() throws Exception {
+        MediaAsset asset = new MediaAsset("SKU-1", "doc.pdf", "assets/doc.pdf", "DOCUMENT_PDF", 10, 0, 0, List.of());
+        asset.setId("asset-dl-1");
+        Mockito.when(assetService.getAssetById("asset-dl-1")).thenReturn(Optional.of(asset));
+        Mockito.when(assetService.getAssetInputStream("asset-dl-1"))
+                .thenReturn(new java.io.ByteArrayInputStream("pdf-content".getBytes()));
+
+        mockMvc.perform(get("/api/assets/asset-dl-1/download"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("Content-Disposition", "attachment; filename=\"doc.pdf\""))
+            .andExpect(content().bytes("pdf-content".getBytes()));
+    }
 }

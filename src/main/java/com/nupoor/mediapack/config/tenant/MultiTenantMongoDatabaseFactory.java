@@ -18,28 +18,45 @@ import java.util.Map;
  */
 public class MultiTenantMongoDatabaseFactory extends SimpleMongoClientDatabaseFactory {
 
-    private static final Map<String, String> TENANT_DB_MAP = Map.of(
+    public static final Map<String, String> TENANT_DB_MAP = Map.of(
         "DE", "media_catalog_de",
         "NL", "media_catalog_nl",
         "US", "media_catalog_us"
     );
 
-    private static final String DEFAULT_DATABASE = "media_catalog_de";
+    public static final String DEFAULT_DATABASE = "media_catalog_de";
 
     public MultiTenantMongoDatabaseFactory(MongoClient mongoClient) {
         super(mongoClient, DEFAULT_DATABASE);
     }
 
+    public static String resolveDatabaseName(String tenant) {
+        if (tenant == null || tenant.isBlank()) {
+            return DEFAULT_DATABASE;
+        }
+        return TENANT_DB_MAP.getOrDefault(tenant.toUpperCase(), DEFAULT_DATABASE);
+    }
+
+    @Override
+    protected String getDefaultDatabaseName() {
+        return resolveDatabaseName(TenantContext.getCurrentTenant());
+    }
+
     @Override
     public MongoDatabase getMongoDatabase() throws DataAccessException {
-        String tenant = TenantContext.getCurrentTenant();
-        String dbName = TENANT_DB_MAP.getOrDefault(tenant, DEFAULT_DATABASE);
-        return getMongoClient().getDatabase(dbName);
+        return getMongoDatabase(getDefaultDatabaseName());
+    }
+
+    @Override
+    protected MongoDatabase doGetMongoDatabase(String dbName) {
+        String effectiveDb = (dbName != null && !dbName.isBlank() && !DEFAULT_DATABASE.equals(dbName))
+                ? dbName
+                : getDefaultDatabaseName();
+        return getMongoClient().getDatabase(effectiveDb);
     }
 
     @Override
     public MongoDatabase getMongoDatabase(String dbName) throws DataAccessException {
-        // Honor explicit database name override requests from Spring internals
         return super.getMongoDatabase(dbName);
     }
 }

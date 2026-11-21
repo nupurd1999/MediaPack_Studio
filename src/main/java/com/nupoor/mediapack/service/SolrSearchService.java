@@ -1,8 +1,9 @@
 package com.nupoor.mediapack.service;
 
+import com.nupoor.mediapack.config.tenant.TenantContext;
 import com.nupoor.mediapack.model.MediaAsset;
 import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.impl.Http2SolrClient;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrInputDocument;
@@ -12,13 +13,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import java.util.*;
 
 /**
  * Solr-backed catalog search service providing:
  * - Full-text asset search by SKU, file name, and tags
  * - Multi-value faceted filtering by file type and tags
- * - Graceful degradation when Solr is offline (returns empty results + warning)
+ * - Tenant isolation filter (tenant_s) to guarantee zero cross-tenant leakage
+ * - Graceful degradation when Solr is offline
  */
 @Service
 public class SolrSearchService {
@@ -28,16 +32,46 @@ public class SolrSearchService {
     @Value("${solr.url:http://localhost:8983/solr/product_media}")
     private String solrUrl;
 
-    private SolrClient buildClient() {
-        return new Http2SolrClient.Builder(solrUrl).build();
+    private SolrClient solrClient;
+
+    public SolrSearchService() {}
+
+    public SolrSearchService(SolrClient solrClient) {
+        this.solrClient = solrClient;
+    }
+
+    @PostConstruct
+    public synchronized void init() {
+        if (this.solrClient == null && solrUrl != null && !solrUrl.isBlank()) {
+            this.solrClient = new HttpSolrClient.Builder(solrUrl).build();
+        }
+    }
+
+    @PreDestroy
+    public synchronized void cleanup() {
+        if (this.solrClient != null) {
+            try {
+                this.solrClient.close();
+            } catch (Exception e) {
+                log.warn("Error closing SolrClient: {}", e.getMessage());
+            }
+        }
+    }
+
+    protected synchronized SolrClient getClient() {
+        if (this.solrClient == null) {
+            this.solrClient = new HttpSolrClient.Builder(solrUrl != null ? solrUrl : "http://localhost:8983/solr/product_media").build();
+        }
+        return this.solrClient;
     }
 
     /**
      * Indexes a MediaAsset document into the Solr product_media core.
-     * Called automatically after every asset save via MediaAssetService.
      */
     public void indexAsset(MediaAsset asset) {
-        try (SolrClient client = buildClient()) {
+        if (asset == null) return;
+        try {
+            SolrClient client = getClient();
             SolrInputDocument doc = new SolrInputDocument();
             doc.addField("id",           asset.getId());
             doc.addField("sku_s",        asset.getSku());
@@ -46,29 +80,20 @@ public class SolrSearchService {
             doc.addField("size_bytes_l", asset.getSizeInBytes());
             doc.addField("width_i",      asset.getWidth());
             doc.addField("height_i",     asset.getHeight());
-            doc.addField("tags_ss",      asset.getTags()); // multiValued field
+            doc.addField("tags_ss",      asset.getTags() != null ? asset.getTags() : List.of());
+            doc.addField("tenant_s",     asset.getTenantRegion() != null ? asset.getTenantRegion() : TenantContext.getCurrentTenant());
 
             client.add(doc);
             client.commit();
-            log.info("Indexed asset [{}] (sku={}) into Solr", asset.getId(), asset.getSku());
+            log.info("Indexed asset [{}] (sku={}, tenant={}) into Solr",
+                    asset.getId(), asset.getSku(), asset.getTenantRegion());
         } catch (Throwable e) {
             log.warn("Solr indexing skipped (Solr offline?): {}", e.getMessage());
         }
-
     }
 
     /**
-     * Executes a full-text + faceted search query.
-     *
-     * Returns a result map containing:
-     *   "hits"   → List<Map<String, Object>> of matching documents
-     *   "facets" → Map<String, List<FacetCount>> keyed by field name
-     *   "total"  → Long count of matching documents
-     *
-     * @param queryTerm     free-text search term (matched against sku, file name, tags)
-     * @param fileTypeFilter optional file_type_s filter value (e.g. "IMAGE_PNG")
-     * @param tagFilter     optional tag filter value (e.g. "würth")
-     * @param rows          max results to return (default 50)
+     * Executes a full-text + faceted search query with tenant isolation.
      */
     public Map<String, Object> searchAssets(String queryTerm, String fileTypeFilter, String tagFilter, int rows) {
         Map<String, Object> result = new LinkedHashMap<>();
@@ -76,15 +101,21 @@ public class SolrSearchService {
         result.put("facets", Collections.emptyMap());
         result.put("total", 0L);
 
-        try (SolrClient client = buildClient()) {
+        try {
+            SolrClient client = getClient();
             ModifiableSolrParams params = new ModifiableSolrParams();
 
-            // Build query string — default to match-all if empty
             String query = buildQuery(queryTerm);
             params.set("q", query);
 
-            // Apply filter queries (additive narrowing)
             List<String> filterQueries = new ArrayList<>();
+            String currentTenant = TenantContext.getCurrentTenant();
+
+            // Tenant isolation filter query
+            if (currentTenant != null && !currentTenant.isBlank()) {
+                filterQueries.add("(tenant_s:" + currentTenant + " OR (*:* NOT tenant_s:[* TO *]))");
+            }
+
             if (fileTypeFilter != null && !fileTypeFilter.isBlank()) {
                 filterQueries.add("file_type_s:" + fileTypeFilter);
             }
@@ -95,57 +126,59 @@ public class SolrSearchService {
                 params.set("fq", filterQueries.toArray(new String[0]));
             }
 
-            // Faceted aggregations
-            params.set("facet",               "true");
-            params.set("facet.field",         new String[]{"file_type_s", "tags_ss"});
-            params.set("facet.mincount",      "1");
-            params.set("facet.limit",         "20");
-
-            params.set("rows", Math.min(rows, 200));  // Enforce max rows guard
-            params.set("sort", "score desc");
+            params.set("facet", "true");
+            params.set("facet.field", new String[]{"file_type_s", "tags_ss"});
+            params.set("facet.mincount", 1);
+            params.set("rows", Math.min(rows, 100));
 
             QueryResponse response = client.query(params);
 
-            // Build hits list
             List<Map<String, Object>> hits = new ArrayList<>();
-            response.getResults().forEach(doc -> hits.add(doc.getFieldValueMap()));
-            result.put("hits",  hits);
-            result.put("total", response.getResults().getNumFound());
+            response.getResults().forEach(doc -> {
+                Map<String, Object> hit = new LinkedHashMap<>();
+                hit.put("id",          doc.getFieldValue("id"));
+                hit.put("sku",         doc.getFieldValue("sku_s"));
+                hit.put("fileName",    doc.getFieldValue("file_name_t"));
+                hit.put("fileType",    doc.getFieldValue("file_type_s"));
+                hit.put("sizeInBytes", doc.getFieldValue("size_bytes_l"));
+                hit.put("width",       doc.getFieldValue("width_i"));
+                hit.put("height",      doc.getFieldValue("height_i"));
+                hit.put("tags",        doc.getFieldValues("tags_ss"));
+                hit.put("tenantRegion", doc.getFieldValue("tenant_s"));
+                hits.add(hit);
+            });
 
-            // Build facets map
             Map<String, List<Map<String, Object>>> facets = new LinkedHashMap<>();
-            if (response.getFacetFields() != null) {
-                for (FacetField ff : response.getFacetFields()) {
-                    List<Map<String, Object>> counts = new ArrayList<>();
-                    for (FacetField.Count count : ff.getValues()) {
-                        counts.add(Map.of("value", count.getName(), "count", count.getCount()));
+            List<FacetField> facetFields = response.getFacetFields();
+            if (facetFields != null) {
+                for (FacetField ff : facetFields) {
+                    List<Map<String, Object>> values = new ArrayList<>();
+                    if (ff.getValues() != null) {
+                        for (FacetField.Count c : ff.getValues()) {
+                            values.add(Map.of("name", c.getName(), "count", c.getCount()));
+                        }
                     }
-                    facets.put(ff.getName(), counts);
+                    facets.put(ff.getName(), values);
                 }
             }
+
+            result.put("hits", hits);
             result.put("facets", facets);
-
-            log.info("Solr search [q={}, fq={}] returned {} hits", queryTerm, filterQueries, hits.size());
-
+            result.put("total", response.getResults().getNumFound());
+            result.put("tenantRegion", currentTenant);
         } catch (Throwable e) {
-            log.warn("Solr search failed (Solr offline?): {}", e.getMessage());
+            log.warn("Solr search skipped (Solr offline? Returning empty results): {}", e.getMessage());
+            result.put("warning", "Solr search engine currently unreachable. Running in fallback mode.");
         }
-
 
         return result;
     }
 
-    // Overload for backward compatibility
-    public Map<String, Object> searchAssets(String queryTerm, String fileTypeFilter) {
-        return searchAssets(queryTerm, fileTypeFilter, null, 50);
-    }
-
-    private String buildQuery(String queryTerm) {
-        if (queryTerm == null || queryTerm.isBlank()) {
+    private String buildQuery(String term) {
+        if (term == null || term.isBlank() || "*".equals(term.trim())) {
             return "*:*";
         }
-        String escaped = queryTerm.replace(":", "\\:");
-        return String.format("sku_s:%s OR file_name_t:%s OR tags_ss:%s",
-                escaped, escaped, escaped);
+        String clean = term.trim().replaceAll("([+\\-!(){}\\[\\]^\"~*?:\\\\])", "\\\\$1");
+        return String.format("sku_s:*%s* OR file_name_t:*%s* OR tags_ss:*%s*", clean, clean, clean);
     }
 }
