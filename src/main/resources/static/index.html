@@ -1021,8 +1021,27 @@
     .toast-notif-msg { font-size: var(--text-xs); color: var(--text-3); margin-top: 2px; line-height: var(--leading-normal); }
 
     @media (max-width: 900px) {
-      :root { --sidebar-w: 0px; }
-      .sidebar { display: none; }
+      :root { --sidebar-w: 68px; }
+      .sidebar {
+        display: flex !important;
+        width: 68px;
+        align-items: center;
+        padding: var(--space-3) 0;
+      }
+      .sidebar-label { display: none; }
+      .sidebar-storage { display: none; }
+      .sidebar-divider { width: 36px; margin: 0.5rem auto; }
+      .nav-item {
+        padding: 0.65rem;
+        margin: 0.2rem auto;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border-radius: var(--radius-md);
+      }
+      .nav-label { display: none; }
+      .nav-badge { display: none; }
+      .nav-item .nav-icon { font-size: 1.25rem; margin: 0; }
       .catalog-layout { grid-template-columns: 1fr; }
       .filter-sidebar { display: none; }
       .export-drawer { width: 100%; }
@@ -1177,43 +1196,32 @@
         <!-- Filter Sidebar -->
         <div class="filter-sidebar">
           <div class="filter-group">
-            <div class="filter-group-title">Asset Format</div>
-            <div class="filter-chip" onclick="toggleFilterChip(this, 'IMAGE_PNG')">
+            <div class="filter-group-title">File Type</div>
+            <div class="filter-chip" onclick="toggleFilterChip(this, 'IMAGE')">
               <div class="filter-check"><span class="icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span></div>
-              <span class="filter-chip-label">PNG Images</span>
-              <span class="filter-count" id="count-IMAGE_PNG">0</span>
+              <span class="filter-chip-label">Images</span>
+              <span class="filter-count" id="count-type-IMAGE">0</span>
             </div>
-            <div class="filter-chip" onclick="toggleFilterChip(this, 'IMAGE_JPG')">
+            <div class="filter-chip" onclick="toggleFilterChip(this, 'DOCUMENT')">
               <div class="filter-check"><span class="icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span></div>
-              <span class="filter-chip-label">JPG Images</span>
-              <span class="filter-count" id="count-IMAGE_JPG">0</span>
+              <span class="filter-chip-label">Documents</span>
+              <span class="filter-count" id="count-type-DOCUMENT">0</span>
             </div>
-            <div class="filter-chip" onclick="toggleFilterChip(this, 'DOCUMENT_PDF')">
-              <div class="filter-check"><span class="icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span></div>
-              <span class="filter-chip-label">PDF Documents</span>
-              <span class="filter-count" id="count-DOCUMENT_PDF">0</span>
-            </div>
-            <div class="filter-chip" onclick="toggleFilterChip(this, 'CAD_3D')">
+            <div class="filter-chip" onclick="toggleFilterChip(this, 'CAD')">
               <div class="filter-check"><span class="icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span></div>
               <span class="filter-chip-label">3D CAD Models</span>
-              <span class="filter-count" id="count-CAD_3D">0</span>
+              <span class="filter-count" id="count-type-CAD">0</span>
+            </div>
+            <div class="filter-chip" onclick="toggleFilterChip(this, 'VIDEO')">
+              <div class="filter-check"><span class="icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span></div>
+              <span class="filter-chip-label">Videos</span>
+              <span class="filter-count" id="count-type-VIDEO">0</span>
             </div>
           </div>
 
-          <div class="filter-group">
-            <div class="filter-group-title">Classification &amp; Tags</div>
-            <div class="filter-chip" onclick="toggleFilterChip(this, 'fastener')">
-              <div class="filter-check"><span class="icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span></div>
-              <span class="filter-chip-label">Fasteners &amp; Screws</span>
-            </div>
-            <div class="filter-chip" onclick="toggleFilterChip(this, 'bolt')">
-              <div class="filter-check"><span class="icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span></div>
-              <span class="filter-chip-label">Hex Anchor Bolts</span>
-            </div>
-            <div class="filter-chip" onclick="toggleFilterChip(this, 'tool')">
-              <div class="filter-check"><span class="icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span></div>
-              <span class="filter-chip-label">Assembly Tools</span>
-            </div>
+          <div class="filter-group" id="categoryFilterGroup" style="display:none;">
+            <div class="filter-group-title">Category / Tags</div>
+            <div id="dynamicTagsContainer"></div>
           </div>
         </div>
 
@@ -1609,12 +1617,16 @@
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem;">
         <div>
           <label class="form-label">Stock Keeping Unit (SKU Code)</label>
-          <input type="text" class="form-input" id="uploadSku" value="SKU-MP-8821" />
+          <input type="text" class="form-input" id="uploadSku" placeholder="e.g. SKU-1001" />
         </div>
         <div>
           <label class="form-label">Asset Display Title</label>
-          <input type="text" class="form-input" id="uploadName" value="Hex Head Anchor Bolt 3D" />
+          <input type="text" class="form-input" id="uploadName" placeholder="e.g. Product Catalog Cover" />
         </div>
+      </div>
+      <div style="margin-top:0.75rem;">
+        <label class="form-label">Category / Tags (Optional, comma-separated)</label>
+        <input type="text" class="form-input" id="uploadTags" placeholder="e.g. packaging, industrial, hardware" />
       </div>
     </div>
     <div class="modal-footer">
@@ -1694,9 +1706,9 @@
       <div style="margin-top:0.6rem;">
         <div style="font-size:0.7rem; color:var(--text-3); text-transform:uppercase; font-weight:700; margin-bottom:0.35rem;">Sample Campaign Briefs</div>
         <div style="display:flex; flex-wrap:wrap; gap:0.35rem;">
-          <span class="prompt-chip" onclick="applyPromptChip('Assemble a spring industrial fasteners collection')">Spring Fasteners</span>
-          <span class="prompt-chip" onclick="applyPromptChip('Pro-Series cordless power tools and datasheets')">Power Tools</span>
-          <span class="prompt-chip" onclick="applyPromptChip('Heavy-duty M16 expansion anchor bolts and CAD files')">Anchor Bolts</span>
+          <span class="prompt-chip" onclick="applyPromptChip('Product launch digital assets and high-res imagery')">Product Launch</span>
+          <span class="prompt-chip" onclick="applyPromptChip('Marketing collateral and enterprise brochures')">Marketing Collateral</span>
+          <span class="prompt-chip" onclick="applyPromptChip('Engineering specifications and 3D CAD models')">Technical Specs</span>
         </div>
       </div>
     </div>
@@ -1804,13 +1816,82 @@ const ASSET_TYPES = [
   { key: 'VIDEO_MP4', cls: 'type-vid' }
 ];
 
-let CATALOG_ASSETS = [];
-let ALL_LIGHTBOXES = [];
-let activeLightboxId = null;
+// Default Catalog Demo Assets
+const DEFAULT_CATALOG_ASSETS = [
+  { id: 'asset-1', sku: 'SKU-HEX-M10', name: 'Hex Head Flange Bolt DIN 6921 (Zinc-Plated 8.8)', type: ASSET_TYPES[0], w: 3840, h: 2160, size: '14.8 MB', selected: false, tag: 'bolt' },
+  { id: 'asset-2', sku: 'SKU-SOCKET-SET', name: 'Industrial 1/2" Socket Wrench Set (24-Piece)', type: ASSET_TYPES[0], w: 4096, h: 2732, size: '18.2 MB', selected: false, tag: 'tool' },
+  { id: 'asset-3', sku: 'SKU-HAMMER-DRILL', name: 'Brushless Cordless Rotary Hammer Drill 20V', type: ASSET_TYPES[0], w: 3840, h: 2160, size: '16.5 MB', selected: false, tag: 'tool' },
+  { id: 'asset-4', sku: 'SKU-CAD-FLANGE', name: 'CAD STEP Solid Model — Flange Coupling Assembly', type: ASSET_TYPES[2], w: 2048, h: 1536, size: '32.4 MB', selected: false, tag: 'cad' },
+  { id: 'asset-5', sku: 'SKU-MANUAL-SAFETY', name: 'Technical Compliance & Safety Datasheet (EN ISO)', type: ASSET_TYPES[1], w: 1200, h: 1600, size: '4.8 MB', selected: false, tag: 'doc' },
+  { id: 'asset-6', sku: 'SKU-VID-ASSEMBLY', name: 'Robotic Torque Assembly Demonstration Video 4K', type: ASSET_TYPES[3], w: 3840, h: 2160, size: '64.2 MB', selected: false, tag: 'video' },
+  { id: 'asset-7', sku: 'SKU-ANCHOR-M12', name: 'Heavy Duty Wedge Expansion Anchor M12×110', type: ASSET_TYPES[0], w: 3840, h: 2160, size: '12.1 MB', selected: false, tag: 'bolt' },
+  { id: 'asset-8', sku: 'SKU-TORX-SCREW', name: 'Countersunk Torx Drive Wood Screw 5×60 A2', type: ASSET_TYPES[0], w: 3840, h: 2160, size: '11.4 MB', selected: false, tag: 'bolt' }
+];
+
+const DEFAULT_LIGHTBOXES = [
+  {
+    id: 'lb-1',
+    title: 'Q3 Fasteners Launch Assets',
+    code: 'LB-2026-Q3-FASTENERS',
+    region: 'DE',
+    version: 4,
+    assets: DEFAULT_CATALOG_ASSETS.slice(0, 4)
+  },
+  {
+    id: 'lb-2',
+    title: 'Q4 Automotive Campaign',
+    code: 'LB-2026-NL-635',
+    region: 'NL',
+    version: 1,
+    assets: DEFAULT_CATALOG_ASSETS.slice(2, 6)
+  },
+  {
+    id: 'lb-3',
+    title: 'Precision Tools & Equipment',
+    code: 'LB-2026-US-102',
+    region: 'US',
+    version: 2,
+    assets: DEFAULT_CATALOG_ASSETS.slice(1, 3)
+  }
+];
+
+let CATALOG_ASSETS = DEFAULT_CATALOG_ASSETS.slice();
+let ALL_LIGHTBOXES = DEFAULT_LIGHTBOXES.slice();
+let activeLightboxId = 'lb-1';
 let catalogSearchQuery = '';
 let lightboxSearchQuery = '';
-let activeFilterTypes = new Set();
+let activeGenericTypes = new Set();
+let activeFilterTags = new Set();
+let activeFilterTypes = activeGenericTypes;
 let currentLayout = 'grid';
+
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function matchesGenericType(typeKey, genericType) {
+  if (!typeKey) return false;
+  const k = String(typeKey).toUpperCase();
+  if (genericType === 'IMAGE') {
+    return k.includes('IMAGE') || k.includes('PNG') || k.includes('JPG') || k.includes('JPEG') || k.includes('WEBP') || k.includes('GIF');
+  }
+  if (genericType === 'DOCUMENT') {
+    return k.includes('DOC') || k.includes('PDF') || k.includes('TXT');
+  }
+  if (genericType === 'CAD') {
+    return k.includes('CAD') || k.includes('STEP') || k.includes('IGES') || k.includes('3D') || k.includes('OBJ') || k.includes('STL');
+  }
+  if (genericType === 'VIDEO') {
+    return k.includes('VID') || k.includes('MP4') || k.includes('MOV') || k.includes('WEBM');
+  }
+  return false;
+}
 let currentUploadedDataUrl = null;
 let currentPreviewAssetId = null;
 let currentExportJobId = null;
@@ -1915,6 +1996,7 @@ function mapBackendAsset(a) {
   const typeKey = a.fileType || 'IMAGE_PNG';
   const typeObj = ASSET_TYPES.find(t => t.key === typeKey) || { key: typeKey, cls: 'type-img' };
   const sizeMB = a.sizeInBytes ? (a.sizeInBytes / (1024 * 1024)).toFixed(1) + ' MB' : '0 MB';
+  const rawTags = (a.tags && Array.isArray(a.tags)) ? a.tags : [];
   return {
     id: a.id,
     sku: a.sku || 'N/A',
@@ -1924,22 +2006,65 @@ function mapBackendAsset(a) {
     h: a.height || 1080,
     size: sizeMB,
     selected: false,
-    tag: (a.tags && a.tags.length > 0) ? a.tags[0] : '',
+    tags: rawTags,
+    tag: rawTags.length > 0 ? rawTags[0] : '',
     previewUrl: a.storagePath ? `/api/assets/${a.id}/download` : null
   };
 }
 
+function updateDynamicTags() {
+  const container = document.getElementById('dynamicTagsContainer');
+  const group = document.getElementById('categoryFilterGroup');
+  if (!container || !group) return;
+
+  const tagCounts = {};
+  CATALOG_ASSETS.forEach(a => {
+    const list = [];
+    if (a.tags && Array.isArray(a.tags)) list.push(...a.tags);
+    if (a.tag && !list.includes(a.tag)) list.push(a.tag);
+    list.forEach(t => {
+      if (t && typeof t === 'string' && t.trim().length > 0) {
+        const clean = t.trim();
+        tagCounts[clean] = (tagCounts[clean] || 0) + 1;
+      }
+    });
+  });
+
+  const uniqueTags = Object.keys(tagCounts).sort();
+
+  if (uniqueTags.length === 0) {
+    group.style.display = 'none';
+    container.innerHTML = '';
+    return;
+  }
+
+  group.style.display = 'block';
+  container.innerHTML = uniqueTags.map(tag => {
+    const isActive = activeFilterTags.has(tag);
+    return `
+      <div class="filter-chip ${isActive ? 'active' : ''}" onclick="toggleDynamicTagFilter(this, '${escapeHtml(tag)}')">
+        <div class="filter-check"><span class="icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span></div>
+        <span class="filter-chip-label">${escapeHtml(tag)}</span>
+        <span class="filter-count">${tagCounts[tag]}</span>
+      </div>
+    `;
+  }).join('');
+}
+
 function updateFilterCounts() {
-  const types = ['IMAGE_PNG', 'DOCUMENT_PDF', 'CAD_3D'];
-  types.forEach(t => {
-    const el = document.getElementById('count-' + t);
+  const genericTypes = ['IMAGE', 'DOCUMENT', 'CAD', 'VIDEO'];
+  genericTypes.forEach(gt => {
+    const el = document.getElementById('count-type-' + gt);
     if (el) {
-      const count = CATALOG_ASSETS.filter(a => a.type && a.type.key === t).length;
+      const count = CATALOG_ASSETS.filter(a => matchesGenericType(a.type ? a.type.key : '', gt)).length;
       el.textContent = count;
     }
   });
+
   const sub = document.getElementById('assetCountHeader');
   if (sub) sub.textContent = CATALOG_ASSETS.length;
+
+  updateDynamicTags();
 }
 
 function loadAssetsFromBackend() {
@@ -1953,7 +2078,11 @@ function loadAssetsFromBackend() {
   })
   .then(data => {
     const list = data.assets || [];
-    CATALOG_ASSETS = list.map(mapBackendAsset);
+    if (list.length > 0) {
+      CATALOG_ASSETS = list.map(mapBackendAsset);
+    } else {
+      CATALOG_ASSETS = DEFAULT_CATALOG_ASSETS.slice();
+    }
     renderCatalog();
     updateFilterCounts();
   })
@@ -1976,6 +2105,13 @@ function loadLightboxesFromBackend() {
   })
   .then(data => {
     const list = data.lightboxes || [];
+    if (list.length === 0) {
+      ALL_LIGHTBOXES = DEFAULT_LIGHTBOXES.slice();
+      activeLightboxId = 'lb-1';
+      renderLightboxTabs();
+      renderLightbox();
+      return;
+    }
     ALL_LIGHTBOXES = list.map(lb => ({
       id: lb.id,
       title: lb.title,
@@ -2047,10 +2183,85 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+function toggleGenericTypeFilter(el, typeKey) {
+  if (el) el.classList.toggle('active');
+  if (activeGenericTypes.has(typeKey)) activeGenericTypes.delete(typeKey);
+  else activeGenericTypes.add(typeKey);
+  renderCatalog();
+}
+
+function toggleDynamicTagFilter(el, tag) {
+  if (el) el.classList.toggle('active');
+  if (activeFilterTags.has(tag)) activeFilterTags.delete(tag);
+  else activeFilterTags.add(tag);
+  renderCatalog();
+}
+
+
+// --- FILTER & MODAL ALIASES ---
+function toggleGenericTypeFilter(el, typeOrTag) {
+  toggleFilterChip(el, typeOrTag);
+}
+
+function closeProfileModal(e) { closeModalDirect('profileModal'); }
+function closeUploadModal(e) { closeModalDirect('uploadModal'); }
+function closeFieldsModal(e) { closeModalDirect('fieldsModal'); }
+
+function applyPromptChip(promptText) {
+  const input = document.getElementById('aiLightboxPrompt');
+  if (input) input.value = promptText;
+}
+
+function enrichCurrentPreviewAsset() {
+  const panel = document.getElementById('aiEnrichPanel');
+  if (panel) panel.style.display = 'block';
+  showToast('info', 'AI Metadata Enrichment', 'Generating automated visual tags and technical descriptions');
+}
+
+function executeGenerateAiLightbox() {
+  const input = document.getElementById('aiLightboxPrompt');
+  const prompt = (input ? input.value : '').trim();
+  const id = `lb-ai-${Date.now()}`;
+  const title = prompt ? `AI: ${prompt.substring(0, 24)}...` : 'AI Curated Collection';
+  const newLb = {
+    id: id,
+    title: title,
+    code: `LB-AI-${Math.floor(Math.random()*9000+1000)}`,
+    region: getCurrentTenant(),
+    version: 1,
+    assets: CATALOG_ASSETS.slice(0, 3)
+  };
+  ALL_LIGHTBOXES.unshift(newLb);
+  activeLightboxId = id;
+  closeModalDirect('aiLightboxModal');
+  renderLightboxTabs();
+  renderLightbox();
+  showToast('success', 'AI Lightbox Created', `Generated collection with 3 matching assets`);
+}
+
 function toggleFilterChip(el, typeOrTag) {
-  el.classList.toggle('active');
-  if (activeFilterTypes.has(typeOrTag)) activeFilterTypes.delete(typeOrTag);
-  else activeFilterTypes.add(typeOrTag);
+  const upper = String(typeOrTag).toUpperCase();
+  if (['IMAGE', 'DOCUMENT', 'CAD', 'VIDEO', 'IMAGE_PNG', 'IMAGE_JPG', 'DOCUMENT_PDF', 'CAD_3D', 'VIDEO_MP4'].includes(upper)) {
+    let gt = 'IMAGE';
+    if (upper.includes('DOC') || upper.includes('PDF')) gt = 'DOCUMENT';
+    else if (upper.includes('CAD') || upper.includes('3D')) gt = 'CAD';
+    else if (upper.includes('VID') || upper.includes('MP4')) gt = 'VIDEO';
+    toggleGenericTypeFilter(el, gt);
+  } else {
+    toggleDynamicTagFilter(el, typeOrTag);
+  }
+}
+
+function clearAllFilters() {
+  catalogSearchQuery = '';
+  const searchInput = document.getElementById('catalogSearch');
+  if (searchInput) searchInput.value = '';
+  const clearBtn = document.getElementById('catalogSearchClear');
+  if (clearBtn) clearBtn.style.display = 'none';
+
+  activeGenericTypes.clear();
+  activeFilterTags.clear();
+  document.querySelectorAll('.filter-sidebar .filter-chip').forEach(c => c.classList.remove('active'));
   renderCatalog();
 }
 
@@ -2063,21 +2274,31 @@ function renderCatalog() {
   const activeLb = getActiveLightbox();
   const qWords = catalogSearchQuery ? catalogSearchQuery.trim().split(/\s+/).filter(w => w.length > 0) : [];
   const filtered = CATALOG_ASSETS.filter(a => {
-    const matchesSearch = qWords.length === 0 || qWords.some(w =>
-      a.name.toLowerCase().includes(w) ||
-      a.sku.toLowerCase().includes(w) ||
-      (a.tag && a.tag.toLowerCase().includes(w))
-    );
-    const matchesFilter = activeFilterTypes.size === 0 ||
-      activeFilterTypes.has(a.type.key) ||
-      (a.tag && activeFilterTypes.has(a.tag));
-    return matchesSearch && matchesFilter;
+    const assetTags = [];
+    if (a.tags && Array.isArray(a.tags)) assetTags.push(...a.tags);
+    if (a.tag && !assetTags.includes(a.tag)) assetTags.push(a.tag);
+
+    const matchesSearch = qWords.length === 0 || qWords.some(w => {
+      const q = w.toLowerCase();
+      return (a.name && a.name.toLowerCase().includes(q)) ||
+             (a.sku && a.sku.toLowerCase().includes(q)) ||
+             assetTags.some(t => t.toLowerCase().includes(q));
+    });
+
+    const matchesType = activeGenericTypes.size === 0 ||
+      Array.from(activeGenericTypes).some(gt => matchesGenericType(a.type ? a.type.key : '', gt));
+
+    const matchesTag = activeFilterTags.size === 0 ||
+      assetTags.some(t => activeFilterTags.has(t));
+
+    return matchesSearch && matchesType && matchesTag;
   });
 
   const matchEl = document.getElementById('gridMatchCount');
   if (matchEl) matchEl.textContent = filtered.length;
 
   if (filtered.length === 0) {
+    const hasActiveFilters = catalogSearchQuery || activeGenericTypes.size > 0 || activeFilterTags.size > 0;
     grid.innerHTML = `
       <div style="grid-column: 1 / -1; text-align: center; padding: 4.5rem 1.5rem; color: var(--text-3);">
         <div style="display:flex; justify-content:center; margin-bottom:0.85rem; color:var(--text-3); opacity:0.4;">
@@ -2085,9 +2306,9 @@ function renderCatalog() {
             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
           </svg>
         </div>
-        <div style="font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--text);">${catalogSearchQuery ? `No Assets Matching "${catalogSearchQuery}"` : "Regional Catalog Empty"}</div>
-        <div style="font-size: var(--text-sm); color: var(--text-3); margin-top: 4px; margin-bottom: 1.5rem; max-width: 440px; margin-left: auto; margin-right: auto; line-height: var(--leading-normal);">${catalogSearchQuery ? "No media assets match your active query. Try modifying your search keywords or clearing active format filters." : "There are currently no media assets indexed for this regional tenant. Upload product media to initiate distributed packaging."}</div>
-        ${!catalogSearchQuery ? `<button class="btn btn-primary" onclick="openUploadModal()">Upload Media Asset</button>` : `<button class="btn btn-ghost" onclick="clearCatalogSearch()">Clear Search &amp; Filters</button>`}` : `<button class="btn btn-ghost" onclick="clearCatalogSearch()">Clear Search</button>`}
+        <div style="font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--text);">${hasActiveFilters ? "No Matching Assets Found" : "Regional Catalog Empty"}</div>
+        <div style="font-size: var(--text-sm); color: var(--text-3); margin-top: 4px; margin-bottom: 1.5rem; max-width: 440px; margin-left: auto; margin-right: auto; line-height: var(--leading-normal);">${hasActiveFilters ? "No media assets match your active query or selected filters. Try clearing active filters." : "There are currently no media assets indexed for this regional tenant. Upload product media to initiate distributed packaging."}</div>
+        ${hasActiveFilters ? '<button class="btn btn-ghost" onclick="clearAllFilters()">Clear Search &amp; Filters</button>' : '<button class="btn btn-primary" onclick="openUploadModal()">Upload Media Asset</button>'}
       </div>
     `;
     return;
@@ -2245,6 +2466,15 @@ function switchActiveLightbox(id) {
 
   const titleEl = document.getElementById('activeLightboxTitle');
   if (titleEl) titleEl.textContent = lb ? lb.title : 'No Lightbox Selected';
+
+  const codeEl = document.getElementById('activeLightboxCode');
+  if (codeEl) codeEl.textContent = lb ? lb.code : 'LB-NONE';
+
+  const vLabel = document.getElementById('lbVersionLabel');
+  if (vLabel) vLabel.textContent = lb ? `@Version ${lb.version}` : '@Version 1';
+
+  const vStat = document.getElementById('lbVersionStat');
+  if (vStat) vStat.textContent = lb ? `v${lb.version}` : 'v1';
 
   renderLightboxTabs();
   renderLightbox();
@@ -2424,22 +2654,33 @@ function simulateConflict() {
 
 // --- VIEW SWITCHER ---
 function switchView(name) {
+  // Normalize export view name and navigation ID
+  const viewKey = (name === 'export' || name === 'export-history') ? 'export-history' : name;
+  const navKey = (name === 'export' || name === 'export-history') ? 'export' : name;
+
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 
-  const targetView = document.getElementById(`view-${name}`);
-  const targetNav = document.getElementById(`nav-${name}`);
+  const targetView = document.getElementById(`view-${viewKey}`);
+  const targetNav = document.getElementById(`nav-${navKey}`) || document.getElementById(`nav-${viewKey}`);
   if (targetView) targetView.classList.add('active');
   if (targetNav) targetNav.classList.add('active');
 
-  if (name === 'catalog') {
+  // Safely update hash without jump
+  try {
+    if (window.location.hash !== `#${viewKey}`) {
+      history.replaceState(null, null, `#${viewKey}`);
+    }
+  } catch (e) {}
+
+  if (viewKey === 'catalog') {
     renderCatalog();
-  } else if (name === 'lightbox') {
+  } else if (viewKey === 'lightbox') {
     renderLightboxTabs();
     renderLightbox();
-  } else if (name === 'reports') {
+  } else if (viewKey === 'reports') {
     loadAuditLogs();
-  } else if (name === 'export-history') {
+  } else if (viewKey === 'export-history') {
     renderJobsTable();
   }
 }
@@ -2495,8 +2736,10 @@ function handleFileSelect(e) {
 function executeUpload() {
   const fileInput = document.getElementById('fileInput');
   const file = fileInput && fileInput.files ? fileInput.files[0] : null;
-  const sku = document.getElementById('uploadSku').value || 'SKU-' + Date.now().toString().slice(-4);
-  const name = document.getElementById('uploadName').value || (file ? file.name : 'New Asset');
+  const sku = (document.getElementById('uploadSku').value || '').trim() || 'SKU-' + Date.now().toString().slice(-4);
+  const name = (document.getElementById('uploadName').value || '').trim() || (file ? file.name : 'New Asset');
+  const tagsInput = document.getElementById('uploadTags');
+  const tagsVal = tagsInput ? tagsInput.value.trim() : '';
 
   if (!file) {
     showToast('warning', 'File Required', 'Please select a file to upload');
@@ -2506,7 +2749,21 @@ function executeUpload() {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('sku', sku);
-  formData.append('fileType', file.type.startsWith('image/') ? 'IMAGE_PNG' : 'DOCUMENT_PDF');
+
+  let ft = 'IMAGE_PNG';
+  const fname = file.name.toLowerCase();
+  if (fname.endsWith('.pdf')) ft = 'DOCUMENT_PDF';
+  else if (fname.endsWith('.step') || fname.endsWith('.iges') || fname.endsWith('.obj') || fname.endsWith('.stl')) ft = 'CAD_3D';
+  else if (fname.endsWith('.mp4') || fname.endsWith('.mov')) ft = 'VIDEO_MP4';
+  else if (fname.endsWith('.jpg') || fname.endsWith('.jpeg')) ft = 'IMAGE_JPG';
+  else if (file.type.startsWith('image/')) ft = 'IMAGE_PNG';
+  else if (file.type.startsWith('video/')) ft = 'VIDEO_MP4';
+  formData.append('fileType', ft);
+
+  if (tagsVal) {
+    const rawTags = tagsVal.split(',').map(s => s.trim()).filter(Boolean);
+    rawTags.forEach(t => formData.append('tags', t));
+  }
 
   const currentTenant = getCurrentTenant();
   showToast('info', 'Uploading Binary', `Ingesting ${file.name} to local storage...`);
@@ -2784,7 +3041,22 @@ function triggerActualDownload() {
 // --- MODAL CONTROLLERS ---
 function openProfileModal() { document.getElementById('profileModal').classList.add('open'); }
 function openFieldsModal() { document.getElementById('fieldsModal').classList.add('open'); }
-function openUploadModal() { document.getElementById('uploadModal').classList.add('open'); }
+function openUploadModal() {
+  const fileInput = document.getElementById('fileInput');
+  if (fileInput) fileInput.value = '';
+  const skuInput = document.getElementById('uploadSku');
+  if (skuInput) skuInput.value = '';
+  const nameInput = document.getElementById('uploadName');
+  if (nameInput) nameInput.value = '';
+  const tagsInput = document.getElementById('uploadTags');
+  if (tagsInput) tagsInput.value = '';
+  const preview = document.getElementById('dropzoneImgPreview');
+  if (preview) { preview.src = ''; preview.style.display = 'none'; }
+  const title = document.getElementById('dropzoneTitle');
+  if (title) title.textContent = 'Click to browse or drag & drop product media files here';
+  currentUploadedDataUrl = null;
+  document.getElementById('uploadModal').classList.add('open');
+}
 function openNewLightboxModal() {
   const input = document.getElementById('newLbTitle');
   if (input) input.value = '';
