@@ -76,6 +76,15 @@ class CollaborativeLightboxControllerTest {
     }
 
     @Test
+    @DisplayName("DELETE /api/lightboxes/{id} — deletes lightbox by ID")
+    void testDeleteLightbox_Returns204() throws Exception {
+        Mockito.doNothing().when(lightboxService).deleteLightbox("lb-001");
+
+        mockMvc.perform(delete("/api/lightboxes/lb-001"))
+            .andExpect(status().isNoContent());
+    }
+
+    @Test
     @DisplayName("GET /api/lightboxes/user/{ownerUserId} — returns lightboxes by owner")
     void testGetLightboxesByOwner_ReturnsList() throws Exception {
         CollaborativeLightbox lb = new CollaborativeLightbox("US Heavy Machinery", "john-us");

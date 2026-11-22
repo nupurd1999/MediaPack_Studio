@@ -87,4 +87,11 @@ class CollaborativeLightboxServiceTest {
         CollaborativeLightbox updated = service.shareWithUser("lb-1", "user2");
         assertTrue(updated.getSharedWithUserIds().contains("user2"));
     }
+
+    @Test
+    @DisplayName("deleteLightbox — deletes lightbox by id")
+    void testDeleteLightbox() {
+        service.deleteLightbox("lb-1");
+        Mockito.verify(repository).deleteById("lb-1");
+    }
 }

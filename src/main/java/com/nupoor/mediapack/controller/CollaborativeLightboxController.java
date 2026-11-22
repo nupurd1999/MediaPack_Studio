@@ -45,6 +45,12 @@ public class CollaborativeLightboxController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteLightbox(@PathVariable String id) {
+        lightboxService.deleteLightbox(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/user/{ownerUserId}")
     public ResponseEntity<Map<String, Object>> getLightboxesByOwner(@PathVariable String ownerUserId) {
         List<CollaborativeLightbox> lightboxes = lightboxService.getLightboxesByOwner(ownerUserId);

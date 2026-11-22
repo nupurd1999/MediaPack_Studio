@@ -76,4 +76,10 @@ public class CollaborativeLightboxService {
         lightbox.setLastModifiedAt(Instant.now());
         return lightboxRepository.save(lightbox);
     }
+
+    public void deleteLightbox(String id) {
+        if (id != null && !id.isBlank()) {
+            lightboxRepository.deleteById(id);
+        }
+    }
 }
