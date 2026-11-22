@@ -29,6 +29,15 @@ public class CollaborativeLightboxController {
         return ResponseEntity.ok(created);
     }
 
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> getAllLightboxes() {
+        List<CollaborativeLightbox> lightboxes = lightboxService.getLightboxesByOwner("ND");
+        return ResponseEntity.ok(Map.of(
+            "tenantRegion", TenantContext.getCurrentTenant(),
+            "lightboxes", lightboxes
+        ));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<CollaborativeLightbox> getLightboxById(@PathVariable String id) {
         return lightboxService.getLightboxById(id)
