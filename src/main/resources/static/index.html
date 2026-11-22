@@ -1911,8 +1911,15 @@
 
       <!-- Controls -->
       <div class="header-controls">
-        <button class="btn btn-ghost" onclick="openAiStatusModal()" style="height:34px; padding:0 0.75rem; font-size:var(--text-xs); display:flex; align-items:center; gap:0.45rem; border-color:var(--border);" title="View AI Engine Status">
-          <span class="icon" style="color:var(--brand-cyan);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg></span>
+        <button class="btn btn-ghost" onclick="openAiStatusModal()"
+          style="height:34px; padding:0 0.75rem; font-size:var(--text-xs); display:flex; align-items:center; gap:0.45rem; border-color:var(--border);"
+          title="View AI Engine Status">
+          <span class="icon" style="color:var(--brand-cyan);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z">
+              </path>
+            </svg></span>
           <span>AI Engine</span>
           <span class="pill pill-green" id="headerAiBadge" style="font-size:0.65rem; padding:1px 6px;">Ready</span>
         </button>
@@ -1994,7 +2001,7 @@
             </svg></span>
           <span class="nav-label">Settings</span>
         </div>
-        <div class="nav-item" id="nav-infrastructure" onclick="switchView('infrastructure')">
+        <div class="nav-item" id="nav-infrastructure" onclick="switchView('infrastructure')" style="display:none;">
           <span class="nav-icon icon"><svg viewBox="0 0 24 24">
               <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
               <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
@@ -2039,8 +2046,9 @@
                 </svg>
               </span>
               <input class="dedicated-search-input" type="text"
-                placeholder="Search catalog or ask in natural language (e.g. 'German automotive bolts')..." id="catalogSearch"
-                onkeydown="if(event.key==='Enter') executeCatalogSearch()" oninput="handleCatalogSearch(this.value)" />
+                placeholder="Search catalog or ask in natural language (e.g. 'German automotive bolts')..."
+                id="catalogSearch" onkeydown="if(event.key==='Enter') executeCatalogSearch()"
+                oninput="handleCatalogSearch(this.value)" />
               <span class="dedicated-search-clear icon" id="catalogSearchClear" onclick="clearCatalogSearch()"
                 title="Clear Search">
                 <svg viewBox="0 0 24 24">
@@ -2049,8 +2057,15 @@
                 </svg>
               </span>
             </div>
-            <button class="btn btn-ghost" onclick="executeCatalogSearch()" style="height:42px; padding:0 0.95rem; border-color:var(--border); display:flex; align-items:center; gap:0.4rem; white-space:nowrap; font-size:var(--text-xs);" title="Run Intent-Based AI Smart Search">
-              <span class="icon" style="color:var(--brand-cyan);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg></span>
+            <button class="btn btn-ghost" onclick="executeCatalogSearch()"
+              style="height:42px; padding:0 0.95rem; border-color:var(--border); display:flex; align-items:center; gap:0.4rem; white-space:nowrap; font-size:var(--text-xs);"
+              title="Run Intent-Based AI Smart Search">
+              <span class="icon" style="color:var(--brand-cyan);"><svg viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path
+                    d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z">
+                  </path>
+                </svg></span>
               <span>AI Smart Search</span>
             </button>
           </div>
@@ -2148,7 +2163,13 @@
               (@Version)</div>
           </div>
           <div class="page-actions">
-            <button class="btn btn-ghost" onclick="openAiLightboxModal()"><span class="icon" style="color:var(--brand-cyan);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg></span> ✨ AI Smart Lightbox</button>
+            <button class="btn btn-ghost" onclick="openAiLightboxModal()"><span class="icon"
+                style="color:var(--brand-cyan);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path
+                    d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z">
+                  </path>
+                </svg></span> ✨ AI Smart Lightbox</button>
             <button class="btn btn-ghost" onclick="openNewLightboxModal()"><span class="icon"><svg viewBox="0 0 24 24">
                   <line x1="12" y1="5" x2="12" y2="19"></line>
                   <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -2333,7 +2354,8 @@
               <div>
                 <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:0.25rem;">
                   <span>NL (Netherlands)</span><span style="font-family:var(--font-mono); font-weight:700;">14.2
-                    GB</span></div>
+                    GB</span>
+                </div>
                 <div style="height:6px; background:var(--border); border-radius:3px; overflow:hidden;">
                   <div style="width:30%; height:100%; background:var(--blue);"></div>
                 </div>
@@ -2929,19 +2951,25 @@
         </button>
       </div>
       <!-- AI Package Manifest & Compliance Notice -->
-      <div style="margin-top: 1rem; margin-bottom: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.85rem;">
+      <div
+        style="margin-top: 1rem; margin-bottom: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.85rem;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.5rem;">
-          <div style="display:flex; align-items:center; gap:0.4rem; font-size:0.75rem; font-weight:700; color:var(--brand-cyan);">
+          <div
+            style="display:flex; align-items:center; gap:0.4rem; font-size:0.75rem; font-weight:700; color:var(--brand-cyan);">
             <span class="icon">✨</span>
             <span>AI Package Manifest &amp; Compliance</span>
           </div>
-          <button class="btn btn-ghost" id="btnGenManifest" style="height:26px; padding:0 0.6rem; font-size:0.7rem; border-color:var(--border);" onclick="generateAiManifestPreview()">✨ Preview Manifest</button>
+          <button class="btn btn-ghost" id="btnGenManifest"
+            style="height:26px; padding:0 0.6rem; font-size:0.7rem; border-color:var(--border);"
+            onclick="generateAiManifestPreview()">✨ Preview Manifest</button>
         </div>
-        <div id="aiManifestContent" style="display:none; max-height:160px; overflow-y:auto; font-size:0.7rem; font-family:var(--font-mono); color:var(--text-2); background:var(--card); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.6rem; white-space:pre-wrap; line-height:1.4;"></div>
+        <div id="aiManifestContent"
+          style="display:none; max-height:160px; overflow-y:auto; font-size:0.7rem; font-family:var(--font-mono); color:var(--text-2); background:var(--card); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.6rem; white-space:pre-wrap; line-height:1.4;">
+        </div>
       </div>
 
-      <button class="btn btn-primary btn-export-action" id="startExportBtn"
-        onclick="startExportSimulation()">Start Export Job</button>
+      <button class="btn btn-primary btn-export-action" id="startExportBtn" onclick="startExportSimulation()">Start
+        Export Job</button>
     </div>
   </div>
 
@@ -3595,9 +3623,9 @@
                 assets: (backendLb.assets && backendLb.assets.length > 0)
                   ? backendLb.assets.map(mapBackendAsset)
                   : (backendLb.assetIds || []).map(aid => {
-                      const found = CATALOG_ASSETS.find(a => a.id === aid || a.sku === aid);
-                      return found ? Object.assign({}, found) : { id: aid, sku: 'SKU-' + aid.substring(0, 6), name: 'Asset ' + aid.substring(0, 6), type: ASSET_TYPE_MAP.IMAGE_PNG, w: 1920, h: 1080, size: '12 MB', selected: false };
-                    })
+                    const found = CATALOG_ASSETS.find(a => a.id === aid || a.sku === aid);
+                    return found ? Object.assign({}, found) : { id: aid, sku: 'SKU-' + aid.substring(0, 6), name: 'Asset ' + aid.substring(0, 6), type: ASSET_TYPE_MAP.IMAGE_PNG, w: 1920, h: 1080, size: '12 MB', selected: false };
+                  })
               };
 
               const existingIdx = currentList.findIndex(l => l.id === backendLb.id || l.title === backendLb.title);
@@ -3810,7 +3838,7 @@
 
     async function enrichCurrentPreviewAsset() {
       const asset = CATALOG_ASSETS.find(a => a.id === currentPreviewAssetId) ||
-                    (getActiveLightbox() ? getActiveLightbox().assets.find(a => a.id === currentPreviewAssetId) : null);
+        (getActiveLightbox() ? getActiveLightbox().assets.find(a => a.id === currentPreviewAssetId) : null);
       if (!asset) return;
 
       const btn = document.getElementById('btnEnrichAi');
@@ -3918,9 +3946,9 @@
             assets: (lbObj.assets && lbObj.assets.length > 0)
               ? lbObj.assets.map(mapBackendAsset)
               : (lbObj.assetIds || (data.aiResult ? data.aiResult.selectedAssetIds : []) || []).map(aid => {
-                  const f = CATALOG_ASSETS.find(a => a.id === aid || a.sku === aid);
-                  return f ? Object.assign({}, f) : { id: aid, sku: aid, name: aid, type: ASSET_TYPE_MAP.IMAGE_PNG, w: 1920, h: 1080, size: '12 MB', selected: false };
-                })
+                const f = CATALOG_ASSETS.find(a => a.id === aid || a.sku === aid);
+                return f ? Object.assign({}, f) : { id: aid, sku: aid, name: aid, type: ASSET_TYPE_MAP.IMAGE_PNG, w: 1920, h: 1080, size: '12 MB', selected: false };
+              })
           };
 
           ALL_LIGHTBOXES.unshift(mappedLightbox);
@@ -4235,7 +4263,7 @@
       switchActiveLightbox(activeLightboxId);
       showToast('info', 'Lightbox Deleted', 'Collection removed');
 
-      fetch(`/api/lightboxes/${id}`, { method: 'DELETE' }).catch(() => {});
+      fetch(`/api/lightboxes/${id}`, { method: 'DELETE' }).catch(() => { });
     }
 
     function switchActiveLightbox(id) {
@@ -4300,7 +4328,7 @@
             }
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     }
 
     function addToLightbox(e, assetId) {
