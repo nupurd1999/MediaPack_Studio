@@ -2015,8 +2015,9 @@
 
       <!-- Controls -->
       <div class="header-controls">
-        <button class="btn btn-ghost" onclick="openAiStatusModal()"
-          style="height:34px; padding:0 0.75rem; font-size:var(--text-xs); display:flex; align-items:center; gap:0.45rem; border-color:var(--border);"
+        <!-- AI Engine status button hidden per user request -->
+        <button class="btn btn-ghost" onclick="openAiStatusModal()" id="btnHeaderAiEngine"
+          style="display:none !important; height:34px; padding:0 0.75rem; font-size:var(--text-xs); align-items:center; gap:0.45rem; border-color:var(--border);"
           title="View AI Engine Status">
           <span class="icon" style="color:var(--brand-cyan);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
