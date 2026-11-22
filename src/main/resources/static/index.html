@@ -265,6 +265,7 @@
         "sidebar main";
       height: 100vh;
       overflow: hidden;
+      transition: grid-template-columns 0.22s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .header {
@@ -285,7 +286,7 @@
       gap: 0.7rem;
       text-decoration: none;
       flex-shrink: 0;
-      width: calc(var(--sidebar-w) - 1.25rem);
+      margin-right: 1.25rem;
     }
 
     .brand-icon {
@@ -534,8 +535,111 @@
       border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
       padding: var(--space-4) 0;
       overflow-y: auto;
+      overflow-x: hidden;
+      box-sizing: border-box;
+      transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), padding 0.22s ease;
+      z-index: 90;
+    }
+
+    .sidebar-top {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    .sidebar-bottom {
+      display: flex;
+      flex-direction: column;
+      margin-top: auto;
+      padding-top: 0.5rem;
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    /* Collapsed Sidebar State */
+    .app-shell.sidebar-collapsed {
+      grid-template-columns: 68px 1fr !important;
+    }
+
+    .app-shell.sidebar-collapsed .sidebar {
+      width: 68px !important;
+      align-items: center !important;
+      padding: var(--space-3) 0 !important;
+    }
+
+    .app-shell.sidebar-collapsed .sidebar-top,
+    .app-shell.sidebar-collapsed .sidebar-bottom {
+      align-items: center !important;
+      width: 100% !important;
+    }
+
+    .app-shell.sidebar-collapsed .sidebar-label,
+    .app-shell.sidebar-collapsed .nav-label,
+    .app-shell.sidebar-collapsed .nav-badge,
+    .app-shell.sidebar-collapsed .sidebar-storage {
+      display: none !important;
+    }
+
+    .app-shell.sidebar-collapsed .nav-item {
+      padding: 0.65rem !important;
+      margin: 0.2rem auto !important;
+      justify-content: center !important;
+      width: 44px !important;
+      height: 44px !important;
+      border-radius: var(--radius-md) !important;
+      border-left: none !important;
+      position: relative;
+    }
+
+    .app-shell.sidebar-collapsed .nav-item.active {
+      background: var(--card-high) !important;
+    }
+
+    .app-shell.sidebar-collapsed .nav-item.active .nav-icon {
+      color: var(--red) !important;
+    }
+
+    .app-shell.sidebar-collapsed .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      bottom: 8px;
+      width: 3px;
+      background: var(--red);
+      border-radius: 0 2px 2px 0;
+    }
+
+    .app-shell.sidebar-collapsed .nav-item .nav-icon {
+      font-size: 1.25rem !important;
+      margin: 0 !important;
+    }
+
+    .app-shell.sidebar-collapsed .sidebar-divider {
+      width: 36px !important;
+      margin: 0.5rem auto !important;
+    }
+
+    .sidebar-collapse-btn {
+      color: var(--text-4);
+      cursor: pointer;
+    }
+
+    .sidebar-collapse-btn:hover {
+      color: var(--text);
+      background: var(--card-high);
+    }
+
+    #sidebarCollapseIcon svg {
+      transition: transform 0.25s ease;
+    }
+
+    .app-shell.sidebar-collapsed #sidebarCollapseIcon svg {
+      transform: rotate(180deg);
     }
 
     .sidebar-section {
@@ -1934,81 +2038,90 @@
     </header>
 
     <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="sidebar-section">
-        <div class="sidebar-label">Workspace</div>
+    <aside class="sidebar" id="appSidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-section">
+          <div class="sidebar-label">Workspace</div>
 
-        <div class="nav-item active" id="nav-catalog" onclick="switchView('catalog')">
-          <span class="nav-icon icon"><svg viewBox="0 0 24 24">
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
-            </svg></span>
-          <span class="nav-label">Asset Catalog</span>
+          <div class="nav-item active" id="nav-catalog" onclick="switchView('catalog')" title="Asset Catalog">
+            <span class="nav-icon icon"><svg viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg></span>
+            <span class="nav-label">Asset Catalog</span>
+          </div>
 
+          <div class="nav-item" id="nav-lightbox" onclick="switchView('lightbox')" title="Lightboxes">
+            <span class="nav-icon icon"><svg viewBox="0 0 24 24">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg></span>
+            <span class="nav-label">Lightboxes</span>
+          </div>
+
+          <div class="nav-item" id="nav-export" onclick="switchView('export-history')" title="Async Exporters">
+            <span class="nav-icon icon"><svg viewBox="0 0 24 24">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg></span>
+            <span class="nav-label">Async Exporters</span>
+          </div>
         </div>
 
-        <div class="nav-item" id="nav-lightbox" onclick="switchView('lightbox')">
-          <span class="nav-icon icon"><svg viewBox="0 0 24 24">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-            </svg></span>
-          <span class="nav-label">Lightboxes</span>
-
-        </div>
-
-        <div class="nav-item" id="nav-export" onclick="switchView('export-history')">
-          <span class="nav-icon icon"><svg viewBox="0 0 24 24">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-            </svg></span>
-          <span class="nav-label">Async Exporters</span>
-
-        </div>
-      </div>
-
-      <div class="sidebar-divider"></div>
-
-      <!-- Analytics panel hidden per user request -->
-      <div class="sidebar-section" style="display:none;">
-        <div class="sidebar-label">Analytics</div>
-        <div class="nav-item" id="nav-metrics" onclick="switchView('metrics')">
-          <span class="nav-icon icon"><svg viewBox="0 0 24 24">
-              <line x1="18" y1="20" x2="18" y2="10"></line>
-              <line x1="12" y1="20" x2="12" y2="4"></line>
-              <line x1="6" y1="20" x2="6" y2="14"></line>
-            </svg></span>
-          <span class="nav-label">S3 Metrics</span>
-        </div>
-        <div class="nav-item" id="nav-reports" onclick="switchView('reports')">
-          <span class="nav-icon icon"><svg viewBox="0 0 24 24">
-              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-              <polyline points="17 6 23 6 23 12"></polyline>
-            </svg></span>
-          <span class="nav-label">Export Reports</span>
+        <!-- Analytics panel hidden per user request -->
+        <div class="sidebar-section" style="display:none;">
+          <div class="sidebar-label">Analytics</div>
+          <div class="nav-item" id="nav-metrics" onclick="switchView('metrics')">
+            <span class="nav-icon icon"><svg viewBox="0 0 24 24">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+              </svg></span>
+            <span class="nav-label">S3 Metrics</span>
+          </div>
+          <div class="nav-item" id="nav-reports" onclick="switchView('reports')">
+            <span class="nav-icon icon"><svg viewBox="0 0 24 24">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                <polyline points="17 6 23 6 23 12"></polyline>
+              </svg></span>
+            <span class="nav-label">Export Reports</span>
+          </div>
         </div>
       </div>
 
+      <div class="sidebar-bottom">
+        <div class="sidebar-divider"></div>
 
-
-      <div class="sidebar-section">
-        <div class="sidebar-label">System</div>
-        <div class="nav-item" id="nav-settings" onclick="switchView('settings')">
-          <span class="nav-icon icon"><svg viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-              </path>
-            </svg></span>
-          <span class="nav-label">Settings</span>
-        </div>
-        <div class="nav-item" id="nav-infrastructure" onclick="switchView('infrastructure')" style="display:none;">
-          <span class="nav-icon icon"><svg viewBox="0 0 24 24">
-              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-              <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-              <line x1="6" y1="6" x2="6.01" y2="6"></line>
-              <line x1="6" y1="18" x2="6.01" y2="18"></line>
-            </svg></span>
-          <span class="nav-label">Infrastructure</span>
+        <div class="sidebar-section" style="margin-bottom:0.25rem;">
+          <div class="sidebar-label">System</div>
+          <div class="nav-item" id="nav-settings" onclick="switchView('settings')" title="Settings">
+            <span class="nav-icon icon"><svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                </path>
+              </svg></span>
+            <span class="nav-label">Settings</span>
+          </div>
+          <div class="nav-item" id="nav-infrastructure" onclick="switchView('infrastructure')" style="display:none;" title="Infrastructure">
+            <span class="nav-icon icon"><svg viewBox="0 0 24 24">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                <line x1="6" y1="18" x2="6.01" y2="18"></line>
+              </svg></span>
+            <span class="nav-label">Infrastructure</span>
+          </div>
+          <!-- Minimize / Expand Toggle Button -->
+          <div class="nav-item sidebar-collapse-btn" id="btnToggleSidebar" onclick="toggleSidebarCollapse()" title="Collapse Sidebar (Ctrl+B)">
+            <span class="nav-icon icon" id="sidebarCollapseIcon">
+              <svg viewBox="0 0 24 24">
+                <polyline points="11 17 6 12 11 7"></polyline>
+                <polyline points="18 17 13 12 18 7"></polyline>
+              </svg>
+            </span>
+            <span class="nav-label" id="sidebarCollapseLabel">Collapse Sidebar</span>
+          </div>
         </div>
       </div>
     </aside>
@@ -5007,8 +5120,55 @@
       if (drawer) drawer.classList.remove('open');
     }
 
+    // --- SIDEBAR MINIMIZE / COLLAPSE ---
+    function toggleSidebarCollapse() {
+      const appShell = document.querySelector('.app-shell');
+      if (!appShell) return;
+      const isCollapsed = appShell.classList.toggle('sidebar-collapsed');
+      try {
+        localStorage.setItem('mediapack_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+      } catch (e) { }
+      updateSidebarCollapseUI(isCollapsed);
+    }
+
+    function updateSidebarCollapseUI(isCollapsed) {
+      const collapseBtn = document.getElementById('btnToggleSidebar');
+      const collapseLabel = document.getElementById('sidebarCollapseLabel');
+      if (collapseBtn) {
+        collapseBtn.setAttribute('title', isCollapsed ? 'Expand Sidebar (Ctrl+B)' : 'Collapse Sidebar (Ctrl+B)');
+      }
+      if (collapseLabel) {
+        collapseLabel.textContent = isCollapsed ? 'Expand' : 'Collapse';
+      }
+    }
+
+    function initSidebarCollapse() {
+      try {
+        const saved = localStorage.getItem('mediapack_sidebar_collapsed');
+        if (saved === 'true') {
+          const appShell = document.querySelector('.app-shell');
+          if (appShell) {
+            appShell.classList.add('sidebar-collapsed');
+            updateSidebarCollapseUI(true);
+          }
+        }
+      } catch (e) { }
+    }
+
+    // Keyboard shortcut (Ctrl+B or Cmd+B) to toggle sidebar
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
+        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+        if (activeTag !== 'input' && activeTag !== 'textarea') {
+          e.preventDefault();
+          toggleSidebarCollapse();
+        }
+      }
+    });
+
     // --- BOOTSTRAP ---
     initTheme();
+    initSidebarCollapse();
     try { localStorage.removeItem('mediapack_all_lightboxes'); } catch (e) { }
     loadAssetsFromBackend();
     loadLightboxesFromBackend();
